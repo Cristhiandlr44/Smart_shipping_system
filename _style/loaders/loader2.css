@@ -1,0 +1,36 @@
+@charset "UTF-8";
+
+@keyframes sidetoside {
+    50%{
+        left: 100%;
+        transform: translateX(calc(-100% - 4px));
+    }
+}
+
+.loader {
+    top: 50%;
+    left: 50%;
+    width: 80vw;
+    max-width: 400px;
+    min-width: 100px;
+    height: 44px;
+    border-radius: 40px;
+    color: #041855;
+    border: 2px solid;
+    position: fixed;
+    transform: translate(-50%, -50%);
+}
+
+.loader::before{
+    content: "";
+    position: absolute;
+    margin: 2px;
+    width: 25%;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: inherit;
+    background: inherit;
+    background: currentColor;
+    animation: sidetoside 2s infinite linear;
+}

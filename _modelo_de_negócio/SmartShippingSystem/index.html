@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Arquivo Excel</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="Aurora">
+        <h1>Scanear XML Aurora</h1>
+        <form id="xmlForm">
+        <div id="inserir" class="scan">
+            <input type="file" name="xmlFilesInput[]" accept=".xml" multiple>
+            <input id="dataAurora" type="date" >
+            <button type="button" id="scanButtonAurora">Escanear XMLs</button>
+        </div>
+        </form>
+        <div id="loading" style="display: none">Carregando...</div>
+        <progress id="progressBar" value="0" max="100"></progress>
+        <div id="output"></div>
+        <h1>Upload de Arquivo Excel Aurora</h1>
+        <form enctype="multipart/form-data" action="uploadAurora.php" method="post">
+            <input type="file" id="fileInput" name="excel_file" accept=".xlsx">
+            <input type="submit" id="enviarAurora" value="Enviar">
+        </form>
+    </div>
+    <div class="Cruzeiro">
+        <h1>Scanear XML Cruzeiro</h1>
+        <form id="xmlFormCruzeiro">
+        <div id="inserir" class="scan">
+            <input type="file" name="xmlCruzeiroFilesInput[]" accept=".xml" multiple>
+            <input id="dataCruzeiro" type="date" >
+            <input id="cargaCruzeiro" type="number" placeholder="Digite a Carga:">
+            <button type="button" id="scanButtonCruzeiro">Escanear XMLs</button>
+        </div>
+        </form>
+        <div id="loadingCruzeiro" style="display: none">Carregando...</div>
+        <progress id="progressBarCruzeiro" value="0" max="100"></progress>
+        <div id="outputCruzeiro"></div>
+    
+
+    </div>
+    
+    
+    <div class="Suinco">
+        <h1>Scanear XML Suinco</h1>
+        <form id="xmlFormSuinco">
+        <div id="inserir" class="scan">
+            <input type="file" name="xmlSuincoFilesInput[]" accept=".xml" multiple>
+            <input id="dataSuinco" type="date" >
+            <input id="cargaSuinco" type="number" placeholder="Digite a Carga:">
+            <button type="button" id="scanButtonSuinco">Escanear XMLs</button>
+        </div>
+        </form>
+        <div id="loadingSuinco" style="display: none">Carregando...</div>
+        <progress id="progressBarSuinco" value="0" max="100"></progress>
+        <div id="outputSuinco"></div>
+    
+
+    </div>
+    <div class="Plena">
+        <h1>Scanear Excel Plena</h1>
+        <form enctype="multipart/form-data" action="processPlena.php" method="post" id="plenaForm">
+        <div id="inserir" class="scan">
+            <input type="file" name="excel_file" accept=".xlsx" id="inputPlena">
+            <input id="data" type="date" />
+            <input id="cargaPlena" type="number" placeholder="Digite a Carga:">
+            <input type="submit" value="Enviar">
+
+
+        </div>
+        </form>
+        <div id="loadingPlena" style="display: none">Carregando...</div>
+        <progress id="progressBarPlena" value="0" max="100"></progress>
+        <div id="outputPlena"></div>
+    
+
+    </div>
+    
+
+    <script src="script.js"></script>
+</body>
+</html>
