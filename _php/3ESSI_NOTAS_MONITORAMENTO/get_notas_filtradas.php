@@ -32,15 +32,24 @@ try {
         
         // Monta a SQL com parâmetros nomeados para fornecedores
         $sql = "
-            SELECT 
-                n_nota, Cliente, bairro, municipio, peso_bruto, reentrega, fornecedor
-            FROM 
-                notas 
-            WHERE 
-                disponivel = 'S'
-                AND rota = :rota
-                AND fornecedor IN (" . implode(',', array_keys($placeholders)) . ")
-        ";
+                SELECT 
+                    n.n_nota, 
+                    c.nome AS Cliente, 
+                    n.bairro, 
+                    n.cidade, 
+                    n.peso_bruto, 
+                    n.reentrega, 
+                    n.fornecedor
+                FROM 
+                    notas n
+                JOIN 
+                    clientes c ON n.CNPJ = c.CNPJ
+                WHERE 
+                    n.disponivel = 'S'
+                    AND n.rota = :rota
+                    AND n.fornecedor IN (" . implode(',', array_keys($placeholders)) . ")
+            ";
+    
 
         // Prepara e executa a consulta com os parâmetros
         $stmt = $pdo->prepare($sql);

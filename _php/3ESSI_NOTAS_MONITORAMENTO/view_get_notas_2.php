@@ -124,7 +124,7 @@
                                             <th >Nota Fiscal</th> <!-- Coluna 3 maior -->
                                             <th >Cliente</th>
                                             <th >Peso</th>
-                                            <th >Município</th>
+                                            <th >Bairro</th>
                                             <th >Cidade</th>
                                             <th >Reentrega</th>
                                             <th >Ações</th>
@@ -163,8 +163,29 @@
                         </div>
                     </div>
                 </div>
-                
+                <?php
+                            $title = "- Rotas";
+                            require_once($relative . "elements/tituloProjetoMainSection.php");
 
+                            if ($_SESSION['tipo'] == 1) {
+                                echo "
+                                <div class='row'>
+                                    <p class='col-sm-8 offset-sm-2 col-md-11 offset-md-1' style='font-size: 1.5em;text-align: center;'>Redes</p>
+                                </div>";
+                            }
+                ?>    
+                    </div>
+
+         
+                    <div class="container my-4">
+                    <div class="row">
+
+                        <!-- Cards das Rotas -->
+                        <div id="cardsRotasRedes" class="d-flex flex-wrap gap-3">
+                            <!-- Cards gerados dinamicamente via JavaScript -->
+                        </div>
+                    </div>
+                    </div>
             </div>
 
 

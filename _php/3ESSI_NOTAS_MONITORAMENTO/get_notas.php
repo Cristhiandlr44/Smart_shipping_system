@@ -14,14 +14,24 @@ try {
 
         // Consulta SQL para selecionar as notas com base na rota
         $sql = "
-            SELECT 
-                n_nota, Cliente, bairro, municipio, peso_bruto, reentrega,fornecedor
-            FROM 
-                notas 
-            WHERE 
-                disponivel = 'S'
-                AND rota = :rota
-        ";
+                SELECT 
+                    n.n_nota, 
+                    c.nome AS Cliente, 
+                    n.bairro, 
+                    n.cidade, 
+                    n.peso_bruto, 
+                    n.reentrega, 
+                    n.fornecedor
+                FROM 
+                    notas n
+                JOIN 
+                    clientes c ON n.CNPJ = c.CNPJ
+                WHERE 
+                    n.disponivel = 'S'
+                    AND n.rota = :rota
+                    AND (n.cidade != 'Montes Claros' OR c.tipo != 'rede')  -- Exclui clientes de Montes Claros com tipo 'rede'
+            ";
+    
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['rota' => $rota]);

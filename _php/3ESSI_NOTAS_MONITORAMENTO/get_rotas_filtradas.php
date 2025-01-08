@@ -2,14 +2,14 @@
 require_once("../3SSI_CRUD/conexao.php");
 header('Content-Type: application/json; charset=utf-8'); // Retorno como JSON
 
-// Valida se o parâmetro 'fornecedores' foi passado na URL
-$fornecedores = isset($_GET['fornecedores']) ? $_GET['fornecedores'] : null;
-
 // Verifica se o método de requisição é GET
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode(['error' => 'Método não permitido']);
     exit;
 }
+
+// Valida se o parâmetro 'fornecedores' foi passado
+$fornecedores = isset($_GET['fornecedores']) ? $_GET['fornecedores'] : null;
 
 // Verifica se o parâmetro 'fornecedores' foi passado e é válido
 if (empty($fornecedores)) {
@@ -27,31 +27,66 @@ if (empty($fornecedoresArray)) {
 }
 
 try {
-    // Configura o modo de erro do PDO
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Consulta SQL para buscar rotas e dados associados com múltiplos fornecedores
-    $sql = "
+    // Consulta para as rotas dos fornecedores
+    $sqlRotas = "
         SELECT 
-            rota,
+            n.rota,
             COUNT(*) AS quantidadeNotas,
-            COUNT(DISTINCT Cliente) AS quantidadeEntregas,
-            SUM(peso_bruto) AS pesoTotal
-        FROM notas 
+            COUNT(DISTINCT c.nome) AS quantidadeEntregas,
+            SUM(n.peso_bruto) AS pesoTotal
+        FROM 
+            notas n
+        JOIN 
+            clientes c ON n.CNPJ = c.CNPJ
         WHERE 
-            disponivel = 'S' AND fornecedor IN (" . implode(',', array_fill(0, count($fornecedoresArray), '?')) . ")
-        GROUP BY rota
+            n.disponivel = 'S' 
+            AND n.fornecedor IN (" . implode(',', array_fill(0, count($fornecedoresArray), '?')) . ")
+        GROUP BY 
+            n.rota
     ";
 
-    // Prepara e executa a consulta com os parâmetros dos fornecedores
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($fornecedoresArray);
+    // Consulta para as rotas das redes
+    $sqlRotasRedes = "
+        SELECT 
+            n.rota,
+            c.nome AS Cliente,
+            COUNT(*) AS quantidadeNotas,
+            COUNT(DISTINCT c.nome) AS quantidadeEntregas,
+            SUM(n.peso_bruto) AS pesoTotal
+        FROM 
+            notas n
+        JOIN 
+            clientes c ON n.CNPJ = c.CNPJ
+        WHERE 
+            n.disponivel = 'S'
+            AND n.cidade = 'Montes Claros'
+            AND c.tipo = 'rede'  -- Considera apenas clientes de tipo 'rede'
+            AND n.fornecedor IN (" . implode(',', array_fill(0, count($fornecedoresArray), '?')) . ")
 
-    // Recupera os dados da consulta
-    $dados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        GROUP BY 
+            c.nome  -- Agrupa pelas informações dos clientes (nome)
+    ";
 
-    // Retorna os dados ou um array vazio caso não haja dados
-    echo json_encode($dados);
+    // Preparando e executando a consulta para as rotas dos fornecedores
+    $stmtRotas = $pdo->prepare($sqlRotas);
+    $stmtRotas->execute($fornecedoresArray);
+    $rotas = $stmtRotas->fetchAll(PDO::FETCH_ASSOC);
+
+    // Preparando e executando a consulta para as rotas das redes
+    $stmtRotasRedes = $pdo->prepare($sqlRotasRedes);
+    $stmtRotasRedes->execute($fornecedoresArray);
+    $rotasRedes = $stmtRotasRedes->fetchAll(PDO::FETCH_ASSOC);
+
+    // Preparando os dados de resposta
+    $response = [
+        'rotas' => $rotas,  // Rotas dos fornecedores
+        'rotasRedes' => $rotasRedes  // Rotas das redes
+    ];
+
+    // Retorna os dados em formato JSON
+    echo json_encode($response);
 
 } catch (Exception $e) {
     // Caso ocorra um erro, retorna código 500 e a mensagem do erro

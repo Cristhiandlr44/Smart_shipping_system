@@ -299,8 +299,10 @@
                                         $dataLargada = date('d/m/Y', strtotime($row['largada']));
 
                                         // Buscando as notas fiscais relacionadas à viagem
-                                        $notasSql = "SELECT n.n_nota, n.cliente, n.bairro, n.municipio, n.peso_bruto 
+                                        $notasSql = "SELECT n.n_nota, c.nome AS cliente, n.bairro, n.cidade, n.peso_bruto 
                                                     FROM notas AS n
+                                                    JOIN 
+                                                    clientes c ON n.CNPJ = c.CNPJ
                                                     WHERE n.id_monitoramento = {$row['id']}";
                                         $notasResult = $conn->query($notasSql);
                                         
@@ -349,7 +351,7 @@
                                                     <td>{$nota['n_nota']}</td>
                                                     <td>{$nota['cliente']}</td>
                                                     <td>{$nota['bairro']}</td>
-                                                    <td>{$nota['municipio']}</td>
+                                                    <td>{$nota['cidade']}</td>
                                                     <td>{$nota['peso_bruto']}</td>
                                                     <td>
                                                         <button class='btn-toggle arrow arrow-closed' onclick='mostrarItensNota({$nota['n_nota']})'></button>
@@ -1122,37 +1124,91 @@
             });
         }
 
-
         function finalizarViagem(id) {
-            if (!confirm("Tem certeza de que deseja finalizar esta viagem?")) {
-                return; // Cancelar a finalização se o usuário não confirmar
-            }
+    if (!confirm("Tem certeza de que deseja finalizar esta viagem?")) {
+        return; // Cancela se o usuário não confirmar
+    }
 
-            // Enviar requisição AJAX para finalizar a viagem e registrar a data de entrega
-            $.ajax({
-                url: 'finalizarViagem.php', // Arquivo PHP que processa a finalização
-                type: 'POST',
-                data: { id: id },
-                success: function(response) {
-                    try {
-                        const data = JSON.parse(response);
-                        if (data.success) {
-                            alert("Viagem finalizada com sucesso.");
-                            location.reload(); // Atualizar a página
-                        } else {
-                            alert("Erro ao finalizar viagem: " + data.message);
-                        }
-                    } catch (e) {
-                        console.error("Erro ao processar a resposta:", e);
-                        alert("Erro ao finalizar a viagem.");
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Erro na requisição AJAX:", error);
-                    alert("Erro ao finalizar viagem.");
-                }
-            });
+    // Cria o modal para o input de data
+    const modal = document.createElement("div");
+    modal.style.position = "fixed";
+    modal.style.top = "50%";
+    modal.style.left = "50%";
+    modal.style.transform = "translate(-50%, -50%)";
+    modal.style.zIndex = "9999";
+    modal.style.backgroundColor = "#fff";
+    modal.style.boxShadow = "0 4px 15px rgba(0, 0, 0, 0.2)";
+    modal.style.padding = "20px";
+    modal.style.textAlign = "center";
+    modal.style.borderRadius = "12px";
+    modal.style.width = "320px";
+    modal.style.fontFamily = "'Arial', sans-serif";
+    modal.style.color = "#333";
+
+    // Adiciona o conteúdo do modal
+    modal.innerHTML = `
+        <h3 style="margin-bottom: 15px; font-size: 18px; color: #444;">Finalizar Viagem</h3>
+        <p style="margin-bottom: 10px; font-size: 14px; color: #666;">Selecione a data de entrega:</p>
+        <input type="date" id="dataEntrega" style="margin-bottom: 20px; padding: 10px; width: 90%; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+        <div>
+            <button id="confirmarData" style="background-color: #28a745; color: #fff; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; margin-right: 10px; font-size: 14px;">
+                Confirmar
+            </button>
+            <button id="cancelar" style="background-color: #dc3545; color: #fff; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                Cancelar
+            </button>
+        </div>
+    `;
+
+    // Adiciona o modal ao corpo
+    document.body.appendChild(modal);
+
+    // Botão para confirmar a data
+    document.getElementById("confirmarData").addEventListener("click", function () {
+        const dataEntrega = document.getElementById("dataEntrega").value;
+
+        if (!dataEntrega) {
+            alert("Por favor, selecione uma data.");
+            return;
         }
+
+        // Faz o AJAX com a data selecionada
+        $.ajax({
+            url: 'finalizarViagem.php',
+            type: 'POST',
+            data: { id: id, dataEntrega: dataEntrega },
+            success: function (response) {
+                try {
+                    const data = JSON.parse(response);
+                    if (data.success) {
+                        alert("Viagem finalizada com sucesso.");
+                        location.reload(); // Atualiza a página
+                    } else {
+                        alert("Erro ao finalizar viagem: " + data.message);
+                    }
+                } catch (e) {
+                    console.error("Erro ao processar a resposta:", e);
+                    alert("Erro ao finalizar a viagem.");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Erro na requisição AJAX:", error);
+                alert("Erro ao finalizar viagem.");
+            }
+        });
+
+        // Remove o modal
+        document.body.removeChild(modal);
+    });
+
+    // Botão para cancelar
+    document.getElementById("cancelar").addEventListener("click", function () {
+        document.body.removeChild(modal);
+    });
+}
+
+
+
 
         let idViagemSelecionada = null; // Armazena o ID da viagem para alteração
 

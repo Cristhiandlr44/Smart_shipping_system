@@ -23,6 +23,8 @@ $relative = isset($_POST['relative']) ? $_POST['relative'] : '';
         <a class="dropdown-item" id="notas-nmonit-tab" href="'.$relative.'3ESSI_NOTAS_MONITORAMENTO/view_get_notas.php">Buscar</a>
         <a class="dropdown-item" id="notas-tab" href="'.$relative.'3SSI_CRUD/view_set_notas.php">Inserir</a>
         <a class="dropdown-item" id="notas-tab" href="'.$relative.'3ESSI_NOTAS_MONITORAMENTO/view_get_notas_2.php">Roterizador</a>
+        <a class="dropdown-item" id="notas-tab" href="'.$relative.'3ESSI_NOTAS_MONITORAMENTO/view_altera_clientes.php">Alterar Clientes</a>
+
       </div>
     </li>';
     echo '<li class="nav-item dropdown">
@@ -36,22 +38,27 @@ $relative = isset($_POST['relative']) ? $_POST['relative'] : '';
     <a class="nav-link" href="'.$relative.'3ESSI_VIAGENS_ABERTA/view_viagens_abertas.php">Viagens Abertas</a>
     </li>';
 
+
+    echo '<li class="nav-item dropdown">
+      <a class="nav-link" href="'.$relative.'3ESSI_VIAGENS_FECHADAS/view_viagens_fechadas.php">Viagens Fechadas</a>
+      </li>';
+
+
     echo '<li class="nav-item dropdown">
       <a class="nav-link dropdown-toggle" style="padding-bottom: 13px;" id="notas-dropdown" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Devoluções</a>
       <div class="dropdown-menu" style="background-color: white; padding: 5px 0; margin-top: -7px;">
         <a class="dropdown-item" id="devolucoes-tab" href="'.$relative.'3ESSI_DEVOLUCOES/view_devolucoes.php" role="tab" aria-controls="Inserir" aria-selected="false">Devoluções em Estoque</a>
         <a class="dropdown-item" id="motoristas-view-tab" href="'.$relative.'3ESSI_DEVOLUCOES/view_devolucoes_enviadas.php">Devoluções Enviadas</a>
+        <a class="dropdown-item" id="motoristas-view-tab" href="'.$relative.'3ESSI_DEVOLUCOES/view_relatorios_retorno.php">Relatorios Retorno</a>
+
       </div>
     </li>';
  
-echo '<li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle" style="padding-bottom: 13px;" id="armazém-dropdown" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Notas Armazém</a>
+    echo '<li class="nav-item dropdown">
+    <a class="nav-link" href="'.$relative.'3ESSI_NOTAS_ARMAZEM/view_notas_armazem.php">Notas Armazém</a>
+    </li>';
  
-</li>';
-echo '<li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle" style="padding-bottom: 13px;" id="finalizadas-dropdown" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Viagens Finalizadas</a>
- 
-</li>';
+
   } else{
     echo 
     '<li class="nav-item">'.

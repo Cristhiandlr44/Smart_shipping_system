@@ -81,14 +81,27 @@ function carregarRotas() {
                 console.error('Erro ao carregar rotas:', data.error);
                 return;
             }
-            exibirCardsRotas(data);  // Função que exibe as rotas
+
+            // Supondo que os dados retornados sejam estruturados assim:
+            // data.rotas -> Rotas normais
+            // data.rotasRedes -> Rotas das redes
+            const rotas = data.rotas || [];  // Dados das rotas
+            const rotasRedes = data.rotasRedes || [];  // Dados das rotas das redes
+
+            // Exibe as rotas normais
+            exibirCardsRotas(rotas);
+
+            // Exibe as rotas das redes
+            exibirCardsRotasRedes(rotasRedes);
         })
         .catch(error => console.error('Erro na requisição AJAX:', error));
     } else {
         url2 = url.pathname.replace(/^\/+/, '') + url.search;
+        console.log(url2)
         fetch(url2)  // Faz a requisição AJAX com a URL gerada
             .then(response => {
-                // Verifica se a resposta não foi 404 ou outro erro
+                console.log("data:", response);
+
                 if (!response.ok) {
                     throw new Error('Erro na requisição: ' + response.status);
                 }
@@ -99,17 +112,26 @@ function carregarRotas() {
                     console.error('Erro ao carregar rotas:', data.error);
                     return;
                 }
-                exibirCardsRotas(data);  // Exibe as rotas
-                
+                const rotas = data.rotas || [];  // Dados das rotas
+                const rotasRedes = data.rotasRedes || [];  // Dados das rotas das redes
+                console.log("rotas normais:", data.rotas)
+                console.log("rotas redes:", data.rotasRedes)
+                // Exibe as rotas normais
+                exibirCardsRotas(rotas);
+
+                // Exibe as rotas das redes
+                exibirCardsRotasRedes(rotasRedes);
             })
             .catch(error => {
                 console.error('Erro na requisição AJAX:', error);
                 response.text().then(text => {
                     console.error("Conteúdo retornado:", text);
+                    console.log("data:", data);
                 });
             });
     }
 }
+
 
 
 // Função para exibir os cards das rotas
@@ -136,6 +158,31 @@ function exibirCardsRotas(rotas) {
         
     });
 }
+
+function exibirCardsRotasRedes(rotas) {
+    const cardsContainer = document.getElementById("cardsRotasRedes");
+    cardsContainer.innerHTML = ""; // Limpa os cards existentes
+    console.log("Dados redes: ", rotas)
+    rotas.forEach(rota => {
+        const card = document.createElement("div");
+        card.className = "card p-3";
+        card.style.width = "18rem";
+        card.innerHTML = `
+            <h5 class="card-title">Rota: ${rota.Cliente}</h5>
+            <p>Peso Total: ${rota.pesoTotal} kg</p>
+            <p>Notas: ${rota.quantidadeNotas}</p>
+            <p>Entregas: ${rota.quantidadeEntregas}</p>
+            <div class="d-flex justify-content-between"> 
+            <button class="btn btn-primary" onclick="abrirModalNotasRedes('${rota.rota}', '${rota.Cliente}')">Ver Detalhes</button>
+                <button class="btn btn-success" onclick="buscarNotas('${rota.rota}')">Gerar Viagem</button>
+            </div>
+        `;
+        
+        cardsContainer.appendChild(card);
+        
+    });
+}
+
 function exibirDadosDetalhes(rotas) {
     const cardsContainer = document.getElementById("modalNotasRotaLabel").textContent = 
     `Detalhes das Notas - Peso Total: ${rota.pesoTtotal}kg - Quantidade: ${rota.quantidadeEntregas}`;
@@ -248,7 +295,6 @@ function abrirModalNotas(rotaId) {
             // Processar as notas
             data.forEach(nota => {
                 const reentregaTexto = nota.reentrega === 'S' ? 'SIM' : 'NÃO';
-
                 // Atualizar os valores para o resumo
                 pesoTotal += parseFloat(nota.peso_bruto) || 0;
                 quantidadeNotas++;
@@ -263,7 +309,7 @@ function abrirModalNotas(rotaId) {
                     <td>${nota.Cliente}</td>
                     <td>${nota.peso_bruto} kg</td>
                     <td>${nota.bairro}</td>
-                    <td>${nota.municipio}</td>
+                    <td>${nota.cidade}</td>
                     <td>${reentregaTexto}</td>
                     <td>
                         <button class="btn btn-sm btn-warning" onclick="abrirModalTrocarRota(${nota.n_nota})">Trocar Rota</button>
@@ -291,11 +337,11 @@ function abrirModalNotas(rotaId) {
             // Exibir o modal
             const modalNotas = new bootstrap.Modal(document.getElementById("modalNotasRota"));
             modalNotas.show();
-            console.log("Apos a função (dentro da promessa)", linhasSelecionadas);
+
+
 
         })
         .catch(error => console.error('Erro ao carregar notas:', error));
-        console.log( "Apos a função 2 ",linhasSelecionadas);
 
     }else{
       
@@ -334,7 +380,7 @@ fetch(`get_notas_filtradas.php?rota=${rotaId}&fornecedores=${fornecedores.join('
                 <td>${nota.Cliente}</td>
                 <td>${nota.peso_bruto} kg</td>
                 <td>${nota.bairro}</td>
-                <td>${nota.municipio}</td>
+                <td>${nota.cidade}</td>
                 <td>${reentregaTexto}</td>
                 <td>
                     <button class="btn btn-sm btn-warning" onclick="abrirModalTrocarRota(${nota.n_nota})">Trocar Rota</button>
@@ -370,6 +416,150 @@ console.log("Apos a função 2 ", linhasSelecionadas);
     }
 
     
+}
+
+
+function abrirModalNotasRedes(rotaId, Cliente) {
+    console.log("rota: ", rotaId  || "cliente: ", Cliente);
+    if (filtrada == false) {
+        // Corrigindo a URL para enviar o parâmetro 'cliente' corretamente
+        fetch(`get_notas_Redes.php?rota=${rotaId}&cliente=${Cliente}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Erro ao carregar notas:', data.error);
+                return;
+            }
+
+            const notasTable = document.getElementById("notasRotaTable");
+            const modalDetalhesRota = document.getElementById("modalDetalhesRota");
+            notasTable.innerHTML = "";
+            console.log("Data: ", data)
+
+            linhasSelecionadas = data.map(nota => nota.n_nota);  // Assumindo que 'data' é um array de notas
+
+            let pesoTotal = 0;
+            let quantidadeNotas = 0;
+
+            // Processar as notas
+            data.forEach(nota => {
+                const reentregaTexto = nota.reentrega === 'S' ? 'SIM' : 'NÃO';
+                // Atualizar os valores para o resumo
+                pesoTotal += parseFloat(nota.peso_bruto) || 0;
+                quantidadeNotas++;
+
+                // Criar linha da tabela
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td><input type="checkbox" class="nota-checkbox" data-id="${nota.n_nota}" /></td>
+                    <td>${nota.fornecedor}</td>
+                    <td>${nota.n_nota}</td>
+                    <td>${nota.Cliente}</td>
+                    <td>${nota.peso_bruto} kg</td>
+                    <td>${nota.bairro}</td>
+                    <td>${nota.cidade}</td>
+                    <td>${reentregaTexto}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="abrirModalTrocarRota(${nota.n_nota})">Trocar Rota</button>
+                    </td>
+                `;
+
+                // Destacar linha se for reentrega
+                if (nota.reentrega === 'S') {
+                    row.classList.add('table-warning');
+                    row.style.backgroundColor = '#f8d7da';
+                    row.style.color = '#721c24';
+                }
+
+                notasTable.appendChild(row);
+            });
+
+            // Atualizar o título do modal com os detalhes
+            modalDetalhesRota.textContent = `Peso Total: ${pesoTotal.toFixed(2)} kg - Notas: ${quantidadeNotas}`;
+
+            // Adicionar evento às checkboxes
+            document.querySelectorAll('.nota-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', habilitarBotaoTrocar);
+            });
+
+            // Exibir o modal
+            const modalNotas = new bootstrap.Modal(document.getElementById("modalNotasRota"));
+            modalNotas.show();
+
+        })
+        .catch(error => console.error('Erro ao carregar notas:', error));
+
+    } else {
+
+        fetch(`get_notas_filtradas.php?rota=${rotaId}&fornecedores=${fornecedores.join(',')}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Erro ao carregar notas:', data.error);
+                return;
+            }
+
+            const notasTable = document.getElementById("notasRotaTable");
+            const modalDetalhesRota = document.getElementById("modalDetalhesRota");
+            notasTable.innerHTML = "";
+
+            // Acesse o array de notas com data.nota
+            linhasSelecionadas = data.nota.map(nota => nota.n_nota);
+
+            let pesoTotal = 0;
+            let quantidadeNotas = 0;
+
+            // Processar as notas
+            data.nota.forEach(nota => {
+                const reentregaTexto = nota.reentrega === 'S' ? 'SIM' : 'NÃO';
+
+                // Atualizar os valores para o resumo
+                pesoTotal += parseFloat(nota.peso_bruto) || 0;
+                quantidadeNotas++;
+
+                // Criar linha da tabela
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td><input type="checkbox" class="nota-checkbox" data-id="${nota.n_nota}" /></td>
+                    <td>${nota.fornecedor}</td>
+                    <td>${nota.n_nota}</td>
+                    <td>${nota.Cliente}</td>
+                    <td>${nota.peso_bruto} kg</td>
+                    <td>${nota.bairro}</td>
+                    <td>${nota.municipio}</td>
+                    <td>${reentregaTexto}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="abrirModalTrocarRota(${nota.n_nota})">Trocar Rota</button>
+                    </td>
+                `;
+
+                // Destacar linha se for reentrega
+                if (nota.reentrega === 'S') {
+                    row.classList.add('linha-destaque');
+                    row.style.backgroundColor = '#f8d7da';
+                    row.style.color = '#721c24';
+                }
+
+                notasTable.appendChild(row);
+            });
+
+            // Atualizar o título do modal com os detalhes
+            modalDetalhesRota.textContent = `Peso Total: ${pesoTotal.toFixed(2)} kg - Notas: ${quantidadeNotas}`;
+
+            // Adicionar evento às checkboxes
+            document.querySelectorAll('.nota-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', habilitarBotaoTrocar);
+            });
+
+            // Exibir o modal
+            const modalNotas = new bootstrap.Modal(document.getElementById("modalNotasRota"));
+            modalNotas.show();
+
+        })
+        .catch(error => console.error('Erro ao carregar notas:', error));
+        
+        console.log("Após a função 2 ", linhasSelecionadas);
+    }
 }
 
 function habilitarBotaoTrocar() {

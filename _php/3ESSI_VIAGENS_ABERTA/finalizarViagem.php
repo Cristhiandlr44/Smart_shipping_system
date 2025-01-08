@@ -5,11 +5,13 @@ $response = ['success' => false];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'];
-    $dataEntrega = date('Y-m-d H:i:s'); // Data e hora atuais no formato do MySQL
+    $finalizaqr = $_POST['dataEntrega'];
+
+    $dataEntrega = $_POST['dataEntrega'];
 
     try {
         // Atualizar a viagem como finalizada e registrar a data de entrega
-        $sql = "UPDATE monitoramento SET finalizada = 'S', data_entrega = ? WHERE id = ?";
+        $sql = "UPDATE monitoramento SET finalizada = 'S', data_finalizacao = ? WHERE id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("si", $dataEntrega, $id);
 
