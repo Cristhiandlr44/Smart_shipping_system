@@ -1,0 +1,339 @@
+# OBS:
+- É NECESSÁRIO TER AMBAS AS DATABASES "SEMINARIOBD" E "SISLOGIN" FUNCIONANDO
+- DEVE-SE ALTERAR O ATRIBUTO "max_file_uploads" DO ARQUIVO PHP.INI PARA 1200, E LOGO APÓS, REINICIAR O SERVIDOR
+- Verificar o usuário e senha das duas databases
+
+### Views:
+
+0. **View 0 - Visao_MotoristasCaminhoes:**
+    - Descrição: Fornece a visualização completa de informações a cerca dos motoristas e caminhões cadastrados
+    ```sql
+    DROP VIEW IF EXISTS Visao_MotoristasCaminhoes;
+    CREATE VIEW Visao_MotoristasCaminhoes AS
+    SELECT c.placa AS placa_caminhao, c.modelo AS modelo_caminhao, mt.nome AS nome_motorista, mt.cpf_motorista AS cpf_motorista, mt.num_habilitacao AS num_habilitacao, mt.venci_habilitacao AS venci_habilitacao
+    FROM motorista_caminhoes m, caminhoes c, motorista mt 
+    WHERE m.fk_placa = c.placa AND
+    m.fk_cpf_motorista = mt.CPF_motorista;
+    ```
+
+
+1. **View 1 - Visao_Monitoramento:**
+   - Descrição: Fornece informações detalhadas sobre o monitoramento.
+   ```sql
+   DROP VIEW IF EXISTS Visao_Monitoramento;
+   CREATE VIEW Visao_Monitoramento AS
+   SELECT m.Id, m.controle, m.largada, m.lead_time, m.status, m.data_entrega, m.placa_caminhao, m.cpf_motorista,
+       c.modelo AS modelo_caminhao, mt.nome AS nome_motorista
+   FROM monitoramento m, caminhoes c, motorista mt 
+   WHERE m.placa_caminhao = c.placa AND
+   m.cpf_motorista = mt.CPF_motorista;
+   ```
+
+2. **View 2 - Visao_SimplificadaNotas:**
+   - Descrição: Fornece informações detalhadas sobre as notas e seus produtos.
+   ```sql
+   DROP VIEW IF EXISTS Visao_SimplificadaNotas
+   CREATE VIEW Visao_SimplificadaNotas AS
+   SELECT 
+       n.n_nota,
+       n.Cliente,
+       n.Endereco,
+       n.bairro,
+       n.municipio,
+       COUNT(p.cod) AS total_produtos
+   FROM 
+       notas n
+   JOIN 
+       produtos p ON n.n_nota = p.nf
+   GROUP BY 
+       n.n_nota, n.Cliente, n.Endereco, n.bairro, n.municipio;
+   ```
+
+3. **Visão 3 - Visão_PesoPorMunicipFornecSimples
+   - Descrição: Fornece informações detalhadas sobre as notas agrupadas por município e por fornecedor, tendo o total de peso como referência.
+   ```sql
+   DROP VIEW IF EXISTS Visao_PesoPorMunicipFornecSimples;
+   CREATE VIEW Visao_PesoPorMunicipFornecSimples AS
+   SELECT n.municipio, SUM(n.peso_bruto) as 'Soma de Pesos'
+   FROM notas n
+      LEFT JOIN redes r ON n.n_nota = r.fk_notas_n_nota
+      LEFT JOIN aurora_notas a ON n.n_nota = a.fk_notas_n_nota
+      LEFT JOIN cruzeiro_notas c ON n.n_nota = c.fk_notas_n_nota
+      LEFT JOIN plena_notas p ON n.n_nota = p.fk_notas_n_nota
+      LEFT JOIN suinco_notas s ON n.n_nota = s.fk_notas_n_nota
+   GROUP BY n.municipio
+   ORDER BY n.municipio;
+   ```
+
+4. **Visão 4 - Visão_PesoPorMunicipFornecCompleto
+   - Descrição: Fornece informações detalhadas sobre as notas agrupadas por município e por fornecedor, tendo o total de peso como referência.
+   - OBS: Ele ainda diferencia se determinada linha com o total de peso por município e cliente é uma rede ou não, segregedando-as
+   ```sql
+   DROP VIEW IF EXISTS Visao_PesoPorMunicipFornecCompleto;
+   CREATE VIEW Visao_PesoPorMunicipFornecCompleto AS
+   SELECT 
+       n.fornecedor, 
+       n.municipio, 
+       SUM(n.peso_bruto) as 'Soma de Pesos', 
+       n.cliente,
+       CASE WHEN r.fk_notas_n_nota IS NOT NULL THEN 'Valor para redes' ELSE NULL END AS ColunaRedes
+   FROM notas n
+      LEFT JOIN redes r ON n.n_nota = r.fk_notas_n_nota
+      LEFT JOIN aurora_notas a ON n.n_nota = a.fk_notas_n_nota
+      LEFT JOIN cruzeiro_notas c ON n.n_nota = c.fk_notas_n_nota
+      LEFT JOIN plena_notas p ON n.n_nota = p.fk_notas_n_nota
+      LEFT JOIN suinco_notas s ON n.n_nota = s.fk_notas_n_nota
+   GROUP BY n.fornecedor, n.cliente, n.municipio  
+   ORDER BY `ColunaRedes` DESC;
+   ```
+
+5. **Visão 5 - Visao_DetalhamentoNotas
+   - Descrição: Fornece informações detalhadas sobre as notas ordenadas por fornecedor, tendo o total de peso como referência todas as informações das mesmas, facilitando o select e possibilitando condições WHERE para busca.
+   ```sql
+   DROP VIEW IF EXISTS Visao_DetalhamentoNotas;
+   CREATE VIEW Visao_GroupByMunicipFornecedores AS
+   SELECT n.fornecedor, n.cliente, n.n_nota as 'N° da Nota', n.endereco, n.numero, n.bairro, n.municipio, n.data_lancamento, n.id_monitoramento, n.valor_nota
+   FROM notas n
+      LEFT JOIN redes r ON n.n_nota = r.fk_notas_n_nota
+      LEFT JOIN aurora_notas a ON n.n_nota = a.fk_notas_n_nota
+      LEFT JOIN cruzeiro_notas c ON n.n_nota = c.fk_notas_n_nota
+      LEFT JOIN plena_notas p ON n.n_nota = p.fk_notas_n_nota
+      LEFT JOIN suinco_notas s ON n.n_nota = s.fk_notas_n_nota
+   ORDER BY n.fornecedor;
+   ```
+
+### Índices:
+
+1. **Índice 1 - IndexMonitoramentoPlaca:**
+   - Descrição: Índice para acelerar buscas por placa de caminhão na tabela de monitoramento.
+   ---- exmplain
+   ```sql
+   CREATE INDEX IndexMonitoramentoPlaca ON monitoramento (placa_caminhao);
+   ```
+
+2. **Índice 2 - IndexProdutosNota:**
+   - Descrição: Índice para acelerar buscas por notas na tabela de produtos.
+   ---- explain select * from produtos where nf = '3014045';
+   ```sql
+   CREATE INDEX IndexProdutosNota ON produtos (nf);
+   ```
+
+### Trigger:
+
+1. **Trigger - AtualizarStatusMonitoramento:**
+   - Descrição: Atualiza o id de monitoramento de todos os produtos associados a suas respectivas notas que possuem um id de monitoramento.
+    ```sql
+    DROP TRIGGER IF EXISTS ALTERA_ID_MONITORAMENTO_PRODUTOS;
+    DELIMITER //
+    CREATE TRIGGER ALTERA_ID_MONITORAMENTO_PRODUTOS
+    AFTER UPDATE ON notas FOR EACH ROW
+    BEGIN
+        IF OLD.id_monitoramento IS NULL OR NEW.id_monitoramento != OLD.id_monitoramento THEN
+            UPDATE produtos
+            SET produtos.id_monitoramento = NEW.id_monitoramento
+            WHERE nf = NEW.n_nota;
+        END IF;
+    END;
+    //
+    DELIMITER ;
+    ```
+
+### Stored Procedures:
+
+1. **Stored Procedure 1 - AlterarProdutoQuantidade:**
+   - Descrição: Altera a quantidade de um produto.
+   ```sql
+   DELIMITER //
+   DROP PROCEDURE IF EXISTS AlterarProdutoQuantidade//
+   CREATE PROCEDURE AlterarProdutoQuantidade(
+       IN p_cod VARCHAR(12),
+       IN p_nf INT,
+       IN p_nova_quantidade FLOAT
+   )
+   BEGIN
+       UPDATE produtos SET quantidade = p_nova_quantidade
+       WHERE cod = p_cod AND nf = p_nf;
+   END;
+   //
+   DELIMITER ;
+   ```
+
+2. **Stored Procedure 2 - UpMotoristas_Caminhoes**
+   - Descrição: Insere um caminhão novo e um novo motorista no sistema, ao mesmo tempo, atualizando a tabela NxN relacionada.
+   ```sql
+   DELIMITER //
+
+   DROP PROCEDURE IF EXISTS UpMotoristas_Caminhoes//
+   CREATE PROCEDURE UpMotoristas_Caminhoes(
+       IN p_placa CHAR(8),
+       IN p_modelo CHAR(1),
+       IN p_nome VARCHAR(20),
+       IN p_CPF_motorista CHAR(11),
+       IN p_num_habilitacao INT,
+       IN p_venci_habilitacao DATE
+   )
+   BEGIN
+       -- Verifica se a placa já existe na tabela
+       IF NOT EXISTS (SELECT 1 FROM caminhoes WHERE placa = p_placa) THEN
+           INSERT INTO caminhoes (placa, modelo) VALUES (p_placa, p_modelo);
+           SELECT 'Caminhão inserido com sucesso.' AS Mensagem;
+       ELSE
+           SELECT 'Placa já cadastrada. Não foi possível inserir o caminhão.' AS Mensagem_Caminhao;
+       END IF;
+
+       -- Verifica se o motorista já existe na tabela
+       IF NOT EXISTS (SELECT 1 FROM motorista WHERE cpf_motorista = p_CPF_motorista) THEN
+           INSERT INTO motorista (nome, CPF_motorista, num_habilitacao, venci_habilitacao) VALUES (p_nome, p_CPF_motorista, p_num_habilitacao, p_venci_habilitacao);
+           SELECT 'Motorista inserido com sucesso.' AS Mensagem;
+       ELSE
+           SELECT 'Motorista já cadastrado. Não foi possível inseri-lo.' AS Mensagem_Motorista;
+       END IF;
+
+       -- Atualiza a tabela motorista_caminhoes
+       IF NOT EXISTS (SELECT 1 FROM motorista_caminhoes WHERE fk_cpf_motorista = p_CPF_motorista AND fk_placa = p_placa) THEN
+           INSERT INTO motorista_caminhoes (fk_placa, fk_cpf_motorista) VALUES (p_placa, p_CPF_motorista);
+           SELECT 'Tabela motorista_caminhoes atualizada com sucesso!' AS Info;
+       ELSE
+           SELECT 'Motorista já associado ao caminhão selecionado.' AS Info;
+       END IF;
+   END //
+
+   DELIMITER ;
+
+   ```
+
+3. **Stored Procedure 3 - VerificarMonitoramentosAtivos**
+   - Descrição: Verificar os monitoramentos ativos do sistema na data atual.
+   ```sql
+   DELIMITER //
+
+   DROP PROCEDURE IF EXISTS VerificarMonitoramentosAtivos//
+   CREATE PROCEDURE VerificarMonitoramentosAtivos()
+   BEGIN
+       SELECT *
+       FROM visao_monitoramento
+       WHERE largada >= CURDATE();
+   END //
+
+   DELIMITER ;
+   ```
+
+4. **Stored Procedure 5 - AttrDataEntregaMonitoramento**
+   - Descrição: Forma facilitada de inserir uma data de entrega ao monitoramento quando ele já for finalziado (ele puxará logo em seguida o trigger "AtualizarStatusMonitoramento")
+   ```sql
+   DELIMITER //
+
+   DROP PROCEDURE IF EXISTS AttrDataEntregaMonitor//
+   CREATE PROCEDURE AttrDataEntregaMonitor(
+       IN p_IdMonitoramento INT,
+       IN p_DataEntrega DATE
+   )
+   BEGIN
+       UPDATE monitoramento
+       SET data_entrega = p_DataEntrega
+       WHERE Id = p_IdMonitoramento;
+   END //
+
+   DELIMITER ;
+   ```
+   -- Exemplo: CALL AttrDataEntregaMonitor(1, '2023-12-01');
+
+================================================================================================================
+### Exemplos de Sentenças/Queries:
+
+1. **Consulta:**
+   - Obter informações sobre o monitoramento:
+   ```sql
+   SELECT * FROM MonitoramentoView WHERE status = 1;
+   ```
+
+2. **Exclusão:**
+   - Excluir uma devolução pelo ID:
+   ```sql
+   DELETE FROM devolucoes WHERE Id = 1;
+   ```
+
+3. **Alteração:**
+   - Atualizar a quantidade de um produto:
+   ```sql
+   CALL AlterarProdutoQuantidade('ABC123', 123456, 50.5);
+   ```
+
+4. **Inserção:**
+   - Inserir motorista, caminhão e atualizar a tabela NxN associando ambos
+   ```sql
+   CALL UpMotoristas_Caminhoes('ABC12345', 'T', 'João Silva', '12345678901', 78901234, '2023-12-31');
+   CALL UpMotoristas_Caminhoes('BCD12345', 'B', 'Cristian', '13245588101', 78912564, '2025-02-21');
+   ```
+
+5. **Excluir todas as notas**
+   -- OBS: FUNÇÃO APENAS PARA FINS DE DESENVOLVIMENTO
+   ```sql
+   DELIMITER //
+
+   DROP PROCEDURE IF EXISTS Test_LimparNotas//
+   CREATE PROCEDURE Test_LimparNotas()
+   BEGIN
+       DELETE FROM CRUZEIRO_NOTAS WHERE 1;
+        DELETE FROM PLENA_NOTAS WHERE 1;
+        DELETE FROM AURORA_NOTAS WHERE 1;
+        DELETE FROM REDES WHERE 1;
+        DELETE FROM SUINCO_NOTAS WHERE 1;
+        DELETE FROM PRODUTOS WHERE 1;
+        DELETE FROM NOTAS WHERE 1;
+        DELETE FROM MONITORAMENTO WHERE 1;
+        delete from motorista_caminhoes where 1;
+        delete from motorista where 1;
+        delete from caminhoes where 1;
+   END //
+   DELIMITER ;
+   ```
+   CALL Test_LimparNotas();
+
+
+
+
+
+
+DELIMITER //
+
+   DROP PROCEDURE IF EXISTS Test_LimparNotas//
+   CREATE PROCEDURE Test_LimparNotas()
+   BEGIN
+       DELETE FROM CRUZEIRO_NOTAS WHERE 1;
+        DELETE FROM PLENA_NOTAS WHERE 1;
+        DELETE FROM AURORA_NOTAS WHERE 1;
+        DELETE FROM REDES WHERE 1;
+        DELETE FROM SUINCO_NOTAS WHERE 1;
+        DELETE FROM PRODUTOS WHERE 1;
+        DELETE FROM NOTAS WHERE 1;
+        DELETE FROM MONITORAMENTO WHERE 1;
+        DELETE FROM clientes WHERE 1;
+
+      
+   END //
+   DELIMITER ;
+   CALL Test_LimparNotas();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+n_carga int(10)
+tipo_dev char(1) {p (parcial) - t (total) - r (reentrega)}
+motivo_Dev varchar(45)   {}
+obs text
+recolhimento bit(1) {sim ou não}
+N_nota_devolucao int(8)
+id_monitoramento {criado na hora via sistema}

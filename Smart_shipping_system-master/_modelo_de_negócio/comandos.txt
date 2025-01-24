@@ -1,0 +1,218 @@
+# OBS:
+- É NECESSÁRIO TER AMBAS AS DATABASES "SEMINARIOBD" E "SISLOGIN" FUNCIONANDO
+- DEVE-SE ALTERAR O ATRIBUTO "max_file_uploads" DO ARQUIVO PHP.INI PARA 1200, E LOGO APÓS, REINICIAR O SERVIDOR
+
+### Views:
+
+1. **View 1 - Visao_Monitoramento:**
+   - Descrição: Fornece informações detalhadas sobre o monitoramento.
+   ```sql
+   DROP VIEW IF EXISTS Visao_Monitoramento;
+   CREATE VIEW Visao_Monitoramento AS
+   SELECT m.Id, m.controle, m.largada, m.lead_time, m.status, m.data_entrega, m.placa_caminhao, m.cpf_motorista,
+       c.modelo AS modelo_caminhao, mt.nome AS nome_motorista
+   FROM monitoramento m, caminhoes c, motorista mt 
+   WHERE m.placa_caminhao = c.placa AND
+   m.cpf_motorista = mt.CPF_motorista;
+   ```
+
+2. **View 2 - Visao_SimplificadaNotas:**
+   - Descrição: Fornece informações detalhadas sobre as notas e seus produtos.
+   ```sql
+   DROP VIEW IF EXISTS Visao_SimplificadaNotas
+   CREATE VIEW Visao_SimplificadaNotas AS
+   SELECT 
+       n.n_nota,
+       n.Cliente,
+       n.Endereco,
+       n.bairro,
+       n.municipio,
+       COUNT(p.cod) AS total_produtos
+   FROM 
+       notas n
+   JOIN 
+       produtos p ON n.n_nota = p.nf
+   GROUP BY 
+       n.n_nota, n.Cliente, n.Endereco, n.bairro, n.municipio;
+   ```
+
+### Índices:
+
+1. **Índice 1 - IndexMonitoramentoPlaca:**
+   - Descrição: Índice para acelerar buscas por placa de caminhão na tabela de monitoramento.
+   ---- exmplain
+   ```sql
+   CREATE INDEX IndexMonitoramentoPlaca ON monitoramento (placa_caminhao);
+   ```
+
+2. **Índice 2 - IndexProdutosNota:**
+   - Descrição: Índice para acelerar buscas por notas na tabela de produtos.
+   ---- explain select * from produtos where nf = '3014045';
+   ```sql
+   CREATE INDEX IndexProdutosNota ON produtos (nf);
+   ```
+
+### Trigger:
+
+1. **Trigger - AtualizarStatusMonitoramento:**
+   - Descrição: Atualiza o status do monitoramento para concluído quando a data de entrega é inserida.
+   ```sql
+   DELIMITER //
+   DROP TRIGGER IF EXISTS AtualizarStatusMonitoramento;
+   CREATE TRIGGER AtualizarStatusMonitoramento
+   AFTER UPDATE ON monitoramento
+   FOR EACH ROW
+   BEGIN
+       IF NEW.data_entrega IS NOT NULL AND OLD.data_entrega IS NULL THEN
+           UPDATE monitoramento
+           SET status = 1
+           WHERE Id = NEW.Id;
+
+           IF NEW.lead_time IS NULL THEN
+           UPDATE monitoramento
+	        SET lead_time = DATEDIFF(NEW.data_entrega, NEW.largada)
+        	WHERE Id = NEW.Id;
+	    END IF;
+       END IF;
+   END //
+
+   DELIMITER ;
+   ```
+
+### Stored Procedures:
+
+1. **Stored Procedure 1 - InserirMotorista:**
+   - Descrição: Insere um novo motorista na tabela de motoristas.
+   ```sql
+   DELIMITER //
+   DROP PROCEDURE IF EXISTS InserirMotorista;
+   CREATE PROCEDURE InserirMotorista(
+       IN p_nome VARCHAR(20),
+       IN p_CPF_motorista CHAR(11),
+       IN p_num_habilitacao INT,
+       IN p_venci_habilitacao DATE
+   )
+   BEGIN
+       INSERT INTO motorista (nome, CPF_motorista, num_habilitacao, venci_habilitacao)
+       VALUES (p_nome, p_CPF_motorista, p_num_habilitacao, p_venci_habilitacao);
+       SELECT 'Motorista inserido com sucesso.' AS Mensagem;
+   END;
+   //
+   DELIMITER ;
+   ```
+
+2. **Stored Procedure 2 - AlterarProdutoQuantidade:**
+   - Descrição: Altera a quantidade de um produto.
+   ```sql
+   DELIMITER //
+   DROP PROCEDURE IF EXISTS AlterarProdutoQuantidade;
+   CREATE PROCEDURE AlterarProdutoQuantidade(
+       IN p_cod VARCHAR(12),
+       IN p_nf INT,
+       IN p_nova_quantidade FLOAT
+   )
+   BEGIN
+       UPDATE produtos SET quantidade = p_nova_quantidade
+       WHERE cod = p_cod AND nf = p_nf;
+   END;
+   //
+   DELIMITER ;
+   ```
+
+3. **Stored Procedure 3 - InserirCaminhao**
+   - Descrição: Insere um caminhão novo no sistema.
+   ```sql
+   DELIMITER //
+
+   DROP PROCEDURE IF EXISTS InserirCaminhao;
+   CREATE PROCEDURE InserirCaminhao(
+       IN p_placa CHAR(8),
+       IN p_modelo CHAR(1)
+   )
+   BEGIN
+       -- Verifica se a placa já existe na tabela
+       IF NOT EXISTS (SELECT 1 FROM caminhoes WHERE placa = p_placa) THEN
+           INSERT INTO caminhoes (placa, modelo) VALUES (p_placa, p_modelo);
+           SELECT 'Caminhão inserido com sucesso.' AS Mensagem;
+       ELSE
+           SELECT 'Placa já cadastrada. Não foi possível inserir o caminhão.' AS Mensagem;
+       END IF;
+   END //
+   DELIMITER ;
+   ```
+
+4. **Stored Procedure 4 - VerificarMonitoramentosAtivos**
+   - Descrição: Verificar os monitoramentos ativos do sistema na data atual.
+   ```sql
+   DELIMITER //
+
+   DROP PROCEDURE IF EXISTS VerificarMonitoramentosAtivos;
+   CREATE PROCEDURE VerificarMonitoramentosAtivos()
+   BEGIN
+       SELECT *
+       FROM visao_monitoramento
+       WHERE largada >= CURDATE();
+   END //
+
+   DELIMITER ;
+   ```
+
+5. **Stored Procedure 5 - AttrDataEntregaMonitoramento**
+   - Descrição: Forma facilitada de inserir uma data de entrega ao monitoramento quando ele já for finalziado (ele puxará logo em seguida o trigger "AtualizarStatusMonitoramento")
+   ```sql
+   DELIMITER //
+
+   CREATE PROCEDURE AttrDataEntregaMonitor(
+       IN p_IdMonitoramento INT,
+       IN p_DataEntrega DATE
+   )
+   BEGIN
+       UPDATE monitoramento
+       SET data_entrega = p_DataEntrega
+       WHERE Id = p_IdMonitoramento;
+   END //
+
+   DELIMITER ;
+   ```
+   -- Exemplo: CALL AttrDataEntregaMonitor(1, '2023-12-01');
+
+### Exemplos de Sentenças/Queries:
+
+1. **Cadastro:**
+   - Inserir um novo motorista:
+   ```sql
+   CALL InserirMotorista('João Silva', '12345678901', 78901234, '2023-12-31');
+   ```
+
+2. **Consulta:**
+   - Obter informações sobre o monitoramento:
+   ```sql
+   SELECT * FROM MonitoramentoView WHERE status = 1;
+   ```
+
+3. **Exclusão:**
+   - Excluir uma devolução pelo ID:
+   ```sql
+   DELETE FROM devolucoes WHERE Id = 1;
+   ```
+
+4. **Alteração:**
+   - Atualizar a quantidade de um produto:
+   ```sql
+   CALL AlterarProdutoQuantidade('ABC123', 123456, 50.5);
+   ```
+
+5. **Inserção:**
+   ```sql
+   CALL InserirCaminhao('ABC12345', 'T');
+   ```
+
+6. **Excluir todas as notas**
+   ```Sql
+   DELETE FROM CRUZEIRO_NOTAS WHERE 1;
+   DELETE FROM PLENA_NOTAS WHERE 1;
+   DELETE FROM REDES WHERE 1;
+   DELETE FROM SUINCO_NOTAS WHERE 1;
+   DELETE FROM NOTAS WHERE 1;
+   DELETE FROM PRODUTOS WHERE 1;
+   ```

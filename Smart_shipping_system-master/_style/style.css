@@ -1,0 +1,89 @@
+@charset "UTF-8";
+
+body{
+    font-family: sans-serif;
+    margin: 0 auto;
+    box-sizing: border-box;
+    background-image: url("../_assets/background-1360-760.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+}
+
+.login{
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+
+.formulario{
+    min-width: 820px;
+    width: 356px;
+    margin: auto;
+    box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;
+}
+
+@media (max-width: 420px) {
+    .formulario{
+        width: auto;
+        min-width: 250px;
+    }
+}
+
+.hide{
+    display: none;
+}
+
+.dash{
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 40px;
+    border-radius: 3px;
+    box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;
+}
+
+nav{
+    background-color: #333;
+    margin-bottom: 2em;
+}
+
+nav li{
+    display: inline-block;
+}
+
+nav li a{
+    color: #fff;
+    text-decoration: none;
+    padding: 15px;
+    display: inline-block;
+    transition: all 0.5s;
+}
+
+.dropdown-menu{
+    position: absolute;
+    display: none;
+}
+
+.dropdown-menu a{
+    display: block;
+}
+
+.dropdown:hover .dropdown-menu{
+    display: block;
+    margin-top: 2px;
+}
+
+.inicial{
+    width: 720px;
+}
+
+#notas-dropdown .dropdown-toggle::after{
+    margin-left: 65%;
+}
+
+.setBord{
+    border: 0.3px solid #04185519;
+    padding: 2px;
+}
