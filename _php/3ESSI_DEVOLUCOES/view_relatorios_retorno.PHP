@@ -36,6 +36,7 @@ require_once($relative . "CRUD/relog.php");
             </div>
             <div class="row">
                 <div id="table" class="table table-striped table-bordered text-nowrap" style="max-width: 100%;">
+                    
                     <table class="table table-striped table-bordered text-nowrap" id="viagensAbertasTable">
                         <thead class="thead-dark">
                             <tr>
@@ -139,7 +140,8 @@ require_once($relative . "CRUD/relog.php");
                 error: function(xhr, status, error) {
                     console.log("Erro na requisição: ", status, error);
                 }
-            });
+            }); 
+
         }
 
 

@@ -1,12 +1,12 @@
 <?php
-require_once('conexao.php');
+require_once("conexao.php");
 
-echo "<p class='mt-3' style='color: green;'>Conexão com o banco de dados bem-sucedida!</p>";
+echo "<p class='mt-3' style='color: green;'>Conexão com o banco de dados bem-sucedida!";
 
-if (!empty($_FILES['xmlFilesInput']['tmp_name'])) {
-    foreach ($_FILES['xmlFilesInput']['tmp_name'] as $key => $tmp_name) {
+if (!empty($_FILES['xmlSaudaliFilesInput']['tmp_name'])) {
+    foreach ($_FILES['xmlSaudaliFilesInput']['tmp_name'] as $key => $tmp_name) {
         if (!empty($tmp_name)) {
-            $xmlContent = file_get_contents($_FILES['xmlFilesInput']['tmp_name'][$key]);
+            $xmlContent = file_get_contents($_FILES['xmlSaudaliFilesInput']['tmp_name'][$key]);
             $xml = new SimpleXMLElement($xmlContent);
 
             // Extrair dados do XML
@@ -23,13 +23,14 @@ if (!empty($_FILES['xmlFilesInput']['tmp_name'])) {
             $infCpl = (string) $xml->NFe->infNFe->infAdic->infCpl;
 
             // Use uma expressão regular para encontrar o número da carga
-            if (preg_match('/CARGA:\s(\d+)/', $infCpl, $matches)) {
-                $nCarga = $matches[1];
+            if (preg_match('/SEQUENCIA ENTREGA:\s(\d+)/', $infCpl, $matches)) {
+                $nSequencia = $matches[1];
             } else {
-                $nCarga = 'N/A'; // Defina um valor padrão se não encontrar o número da carga
+                $nSequencia = 'N/A'; // Defina um valor padrão se não encontrar o número da carga
             }
 
-            $operacao = 'Aurora';
+            $operacao = 'Saudali';
+            
             $tipo = 'V';
 
             // Iniciar a transação para garantir a consistência dos dados
@@ -69,49 +70,50 @@ if (!empty($_FILES['xmlFilesInput']['tmp_name'])) {
                 $stmtCliente->bindParam(':cidade', $xMun);
                 $stmtCliente->bindParam(':peso', $pBruto);
                 $stmtCliente->bindParam(':valor', $vnota);
-                $stmtCliente->bindParam(':data_lancamento', $_POST['dataAurora']);
+                $stmtCliente->bindParam(':data_lancamento', $_POST['dataSaudali']);
                 $stmtCliente->execute();
 
                 // Inserir o número da carga no banco de dados
-                $sqlcarga = "INSERT INTO aurora_notas(fk_notas_n_nota, n_carga) VALUES (:nota, :carga)";
+                $sqlcarga = "INSERT INTO saudali_notas(nf, carga) VALUES (:nf, :carga )";
                 $stmtcarga = $pdo->prepare($sqlcarga);
-                $stmtcarga->bindParam(':nota', $nNF);
-                $stmtcarga->bindParam(':carga', $nCarga);
+                $stmtcarga->bindParam(':nf', $nNF);  
+                $stmtcarga->bindParam(':carga', $_POST['cargaSaudali']);
+
                 $stmtcarga->execute();
 
+
+
+
                 // Extrair informações dos produtos e inserir na tabela "produtos"
-                foreach ($xml->NFe->infNFe->det as $det) {
-                    $cProd = (string) $det->prod->cProd;
-                    $xProd = (string) $det->prod->xProd;
-                    $uTrib = (string) $det->prod->uTrib;
-                    $qTrib = (string) $det->prod->qTrib;
-                
-                    // Extrair o conteúdo de <infAdProd>
-                    $infAdProd = (string) $det->infAdProd;
-                
-                    // Usar expressão regular para encontrar a quantidade e a unidade auxiliar
-                    if (preg_match('/Qtde:\s*([\d.]+)(\w+)\s*/', $infAdProd, $matches)) {
-                        $numero = $matches[1];  // A quantidade auxiliar (número)
-                        $unidadeAux = $matches[2];  // A unidade auxiliar
-                    } else {
-                        // Defina valores padrão se não encontrar a quantidade e unidade
-                        $numero = 'N/A';
-                        $unidadeAux = 'N/A';
+                    foreach ($xml->NFe->infNFe->det as $det) {
+                        $cProd = (string) $det->prod->cProd;
+                        $xProd = (string) $det->prod->xProd;
+                        $uTrib = (string) $det->prod->uTrib;
+                        $qTrib = (string) $det->prod->qTrib;
+                        
+                        // Extrair o conteúdo de <infAdProd>
+                        $infAdProd = (string) $det->infAdProd;
+
+                        // Use uma expressão regular para encontrar o número após 'Qtde:'
+                        if (preg_match('/Qtde_aux=(\d+)/', $infAdProd, $matches)) {
+                            $numero = $matches[1];
+                        } else {
+                            // Defina um valor padrão se não encontrar o número
+                            $numero = 'N/A';
+                        }
+                        
+                        $sqlProdutos = "INSERT INTO produtos (cod, nf, descricao, unidade, quantidade, QuantAux)
+                                VALUES (:cod, :nf, :descricao, :unidade, :quantidade, :QuantAux)";
+                        $stmtProdutos = $pdo->prepare($sqlProdutos);
+                        $stmtProdutos->bindParam(':cod', $cProd);
+                        $stmtProdutos->bindParam(':nf', $nNF);
+                        $stmtProdutos->bindParam(':descricao', $xProd);
+                        $stmtProdutos->bindParam(':unidade', $uTrib);
+                        $stmtProdutos->bindParam(':quantidade', $qTrib);
+                        $stmtProdutos->bindParam(':QuantAux', $numero);
+                        $stmtProdutos->execute();
                     }
-                
-                    $sqlProdutos = "INSERT INTO produtos (cod, nf, descricao, unidade, quantidade, QuantAux, UnidadeAuxiliar)
-                                    VALUES (:cod, :nf, :descricao, :unidade, :quantidade, :QuantAux, :unidadeAux)";
-                    $stmtProdutos = $pdo->prepare($sqlProdutos);
-                    $stmtProdutos->bindParam(':cod', $cProd);
-                    $stmtProdutos->bindParam(':nf', $nNF);
-                    $stmtProdutos->bindParam(':descricao', $xProd);
-                    $stmtProdutos->bindParam(':unidade', $uTrib);
-                    $stmtProdutos->bindParam(':quantidade', $qTrib);
-                    $stmtProdutos->bindParam(':QuantAux', $numero);
-                    $stmtProdutos->bindParam(':unidadeAux', $unidadeAux);
-                    $stmtProdutos->execute();
-                }
-                
+
                 // Commit da transação
                 $pdo->commit();
             } catch (Exception $e) {
@@ -119,12 +121,12 @@ if (!empty($_FILES['xmlFilesInput']['tmp_name'])) {
                 $pdo->rollBack();
                 echo "<p style='color: red;'>Erro ao inserir dados: " . $e->getMessage() . "</p>";
             }
+        
         }
     }
-    
-    print("<p style='color: green;'>Dados inseridos com sucesso no banco de dados!</p>");
+    echo "<p style='color: green;'>Dados inseridos com sucesso no banco de dados!</p>";
 } else {
-    print("<p style='color: red;'>Nenhum arquivo enviado.</p>");
+    echo "<p style='color: red;'>Nenhum arquivo enviado.</p>";
 }
 
 $pdo = null;

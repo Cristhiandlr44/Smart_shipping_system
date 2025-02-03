@@ -127,6 +127,27 @@
                             </div>
                         </div>
                     </div>
+                    <div id="Saudali" class="hide container-fluid px-2 py-2 text-center">
+                        <div class="hide row g-4 py-2 row-cols-1 row-cols-lg-1">
+                            <div class="col">
+                                <h2>Escanear XML Saudali</h2>
+                                <form id="xmlFormSaudali">
+                                    <div id="inserir" class="scan">
+                                        <div class="col-md-6 offset-md-3 mb-3">
+                                            <input class="form-control" type="file" id="InputSaudali" name="xmlSaudaliFilesInput[]" accept=".xml" multiple required>
+                                            <input id="dataSaudali" type="date" class="form-control" required value="<?php echo date("Y-m-d"); ?>">
+                                            <input id="cargaSaudali" type="number" class="form-control" placeholder="Digite a Carga:" required>
+                                            <button type="button" id="scanButtonSaudali" class="btns btn btn-outline-secondary">Escanear XMLs</button>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div id="loadingSaudali" class="hide">Carregando...</div>
+                                <progress id="progressBarSaudali" class="hide" value="0" max="100"></progress>
+                                <div id="outputSaudali"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--
                     <div id="Cruzeiro" class="hide container-fluid px-2 py-2 text-center">
                         <div class="hide row g-4 py-2 row-cols-1 row-cols-lg-1">
                             <div class="col">
@@ -185,6 +206,7 @@
                             </div>
                         </div>
                     </div>
+                    -->
                 </div>
             </div>
         </div>

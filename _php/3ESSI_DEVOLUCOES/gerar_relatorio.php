@@ -74,7 +74,7 @@ $stmt->bind_param('i', $viagemId);  // 'i' indica que o parâmetro é um inteiro
 $stmt->execute();
 $itens = $stmt->get_result();
 
-// Verificar se itens foram encontrados
+// Verificar se itens forams encontrados
 if ($itens->num_rows == 0) {
     echo "Nenhum item encontrado para esta viagem!";
     exit();
