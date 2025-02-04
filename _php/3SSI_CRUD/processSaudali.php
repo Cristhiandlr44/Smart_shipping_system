@@ -1,7 +1,7 @@
 <?php
 require_once("conexao.php");
 
-echo "<p class='mt-3' style='color: green;'>ConexÃ£o com o banco de dados bem-sucedida!";
+echo "<p class='mt-3' style='color: green;'>Conexão com o banco de dados bem-sucedida!";
 
 if (!empty($_FILES['xmlSaudaliFilesInput']['tmp_name'])) {
     foreach ($_FILES['xmlSaudaliFilesInput']['tmp_name'] as $key => $tmp_name) {
@@ -22,28 +22,28 @@ if (!empty($_FILES['xmlSaudaliFilesInput']['tmp_name'])) {
             $vnota = (string) $xml->NFe->infNFe->total->ICMSTot->vProd;
             $infCpl = (string) $xml->NFe->infNFe->infAdic->infCpl;
 
-            // Use uma expressÃ£o regular para encontrar o nÃºmero da carga
+            // Use uma expressão regular para encontrar o número da carga
             if (preg_match('/SEQUENCIA ENTREGA:\s(\d+)/', $infCpl, $matches)) {
                 $nSequencia = $matches[1];
             } else {
-                $nSequencia = 'N/A'; // Defina um valor padrÃ£o se nÃ£o encontrar o nÃºmero da carga
+                $nSequencia = 'N/A'; // Defina um valor padrão se não encontrar o número da carga
             }
 
             $operacao = 'Saudali';
             
             $tipo = 'V';
 
-            // Iniciar a transaÃ§Ã£o para garantir a consistÃªncia dos dados
+            // Iniciar a transação para garantir a consistência dos dados
             $pdo->beginTransaction();
             try {
-                // Verifica se o CNPJ jÃ¡ existe na tabela "clientes"
+                // Verifica se o CNPJ já existe na tabela "clientes"
                 $sqlVerificaCNPJ = "SELECT COUNT(*) FROM clientes WHERE CNPJ = :CNPJ";
                 $stmtVerificaCNPJ = $pdo->prepare($sqlVerificaCNPJ);
                 $stmtVerificaCNPJ->bindParam(':CNPJ', $cnpj);
                 $stmtVerificaCNPJ->execute();
                 $cnpjExistente = $stmtVerificaCNPJ->fetchColumn();
 
-                // Se o CNPJ nÃ£o existir, insere os dados na tabela clientes
+                // Se o CNPJ não existir, insere os dados na tabela clientes
                 if ($cnpjExistente == 0) {
                     $sqlclientedados = "INSERT INTO clientes(CNPJ, nome, rua, bairro, numero, cidade, tipo) 
                                         VALUES (:CNPJ, :nome, :rua, :bairro, :numero, :cidade, :tipo)";
@@ -73,7 +73,7 @@ if (!empty($_FILES['xmlSaudaliFilesInput']['tmp_name'])) {
                 $stmtCliente->bindParam(':data_lancamento', $_POST['dataSaudali']);
                 $stmtCliente->execute();
 
-                // Inserir o nÃºmero da carga no banco de dados
+                // Inserir o número da carga no banco de dados
                 $sqlcarga = "INSERT INTO saudali_notas(nf, carga) VALUES (:nf, :carga )";
                 $stmtcarga = $pdo->prepare($sqlcarga);
                 $stmtcarga->bindParam(':nf', $nNF);  
@@ -84,21 +84,21 @@ if (!empty($_FILES['xmlSaudaliFilesInput']['tmp_name'])) {
 
 
 
-                // Extrair informaÃ§Ãµes dos produtos e inserir na tabela "produtos"
+                // Extrair informações dos produtos e inserir na tabela "produtos"
                     foreach ($xml->NFe->infNFe->det as $det) {
                         $cProd = (string) $det->prod->cProd;
                         $xProd = (string) $det->prod->xProd;
                         $uTrib = (string) $det->prod->uTrib;
                         $qTrib = (string) $det->prod->qTrib;
                         
-                        // Extrair o conteÃºdo de <infAdProd>
+                        // Extrair o conteúdo de <infAdProd>
                         $infAdProd = (string) $det->infAdProd;
 
-                        // Use uma expressÃ£o regular para encontrar o nÃºmero apÃ³s 'Qtde:'
+                        // Use uma expressão regular para encontrar o número após 'Qtde:'
                         if (preg_match('/Qtde_aux=(\d+)/', $infAdProd, $matches)) {
                             $numero = $matches[1];
                         } else {
-                            // Defina um valor padrÃ£o se nÃ£o encontrar o nÃºmero
+                            // Defina um valor padrão se não encontrar o número
                             $numero = 'N/A';
                         }
                         
@@ -114,7 +114,7 @@ if (!empty($_FILES['xmlSaudaliFilesInput']['tmp_name'])) {
                         $stmtProdutos->execute();
                     }
 
-                // Commit da transaÃ§Ã£o
+                // Commit da transação
                 $pdo->commit();
             } catch (Exception $e) {
                 // Em caso de erro, faz o rollback

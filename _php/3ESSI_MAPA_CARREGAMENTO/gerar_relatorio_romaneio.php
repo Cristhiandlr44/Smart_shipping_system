@@ -2,14 +2,14 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-ob_start(); // Inicia o buffer de saÃ­da
+ob_start(); // Inicia o buffer de saída
 
 require_once('../CRUD/relog.php');
 require('../../fpdf/fpdf.php');  // Caminho correto para o FPDF
 
-// Verifica se Ã© um mÃ©todo POST
+// Verifica se é um método POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Recebendo os dados da requisiÃ§Ã£o POST
+    // Recebendo os dados da requisição POST
     $dataLancamento = isset($_POST['dataLancamento']) ? $_POST['dataLancamento'] : '';
     $placa = isset($_POST['placa']) ? $_POST['placa'] : '';
     $id_monitoramento = isset($_POST['id_monitoramento']) ? $_POST['id_monitoramento'] : '';
@@ -34,11 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Verifica se a consulta foi executada com sucesso
     if ($stmt->execute()) {
-        // ObtÃ©m o resultado dos produtos
+        // Obtém o resultado dos produtos
         $result = $stmt->get_result();
         $produtos = $result->fetch_all(MYSQLI_ASSOC);
 
-        // Verifica se hÃ¡ produtos
+        // Verifica se há produtos
         if (count($produtos) > 0) {
             // Agrupar os resultados por tipo de reentrega
             $produtosAgrupados = ['armazem' => [], 'normais' => []];
@@ -65,22 +65,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Cria o objeto PDF
             $pdf = new FPDF();
-            $pdf->SetAutoPageBreak(true, 10);  // Habilitar quebra automÃ¡tica de pÃ¡gina
+            $pdf->SetAutoPageBreak(true, 10);  // Habilitar quebra automática de página
             $pdf->AddPage();
             $pdf->SetFont('Arial', 'B', 12);
 
-            // CabeÃ§alho do PDF
+            // Cabeçalho do PDF
             $pdf->Cell(0, 10, 'Placa: ' . $placa, 0, 1);
             $pdf->Cell(0, 10, 'Id Monitoramento: ' . $id_monitoramento, 0, 1);
             $pdf->Cell(0, 10, 'Data Largada: ' . $dataLancamento, 0, 1);
             
-            // CÃ¡lculos do peso e volume
+            // Cálculos do peso e volume
             $totalPeso = array_sum(array_column($produtos, 'quantidade'));
             $totalVolume = array_sum(array_column($produtos, 'QuantAux'));
             $pdf->Cell(0, 10, 'Peso Total: ' . number_format($totalPeso, 2), 0, 1);
             $pdf->Cell(0, 10, 'Volume Total: ' . number_format($totalVolume, 2), 0, 1);
 
-            // EspaÃ§o para separar o cabeÃ§alho da tabela de produtos
+            // Espaço para separar o cabeçalho da tabela de produtos
             $pdf->Ln(10);
 
             // Tabela Entrega Regular (Produtos Normais)
@@ -117,9 +117,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdf->Ln();
             }
 
-            // EspaÃ§o entre as tabelas de produtos e dados dos clientes
+            // Espaço entre as tabelas de produtos e dados dos clientes
             $pdf->Ln(10);
-            // Tabela GalpÃ£o (ArmazÃ©m)
+            // Tabela Galpão (Armazém)
             $pdf->SetFont('Arial', 'B', 12);
             $pdf->Cell(0, 10, 'Galpao (Armazem)', 0, 1, 'C');
             $pdf->SetFont('Arial', '', 8);
@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdf->Cell(25, 6, 'Data Validade', 1);
             $pdf->Ln();
 
-            // Preenche a tabela GalpÃ£o com os dados
+            // Preenche a tabela Galpão com os dados
             foreach ($produtosAgrupados['armazem'] as $produto) {
                 $operacao = $produto['fornecedor'];
                 $pdf->Cell(15, 6, $operacao, 1);
@@ -144,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (strlen($descricao) > 28) {
                     $descricao = substr($descricao, 0, 28);
                 }
-                // Exibe a descriÃ§Ã£o truncada
+                // Exibe a descrição truncada
                 $pdf->Cell(55, 6, $descricao, 1);
 
                 $pdf->Cell(15, 6, number_format($produto['Peso'], 2), 1);
@@ -193,10 +193,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdf->Ln();
             }
 
-            // Limpa o buffer de saÃ­da antes de enviar os cabeÃ§alhos
+            // Limpa o buffer de saída antes de enviar os cabeçalhos
             ob_end_clean();
 
-            // Definir cabeÃ§alhos para o PDF
+            // Definir cabeçalhos para o PDF
             header('Content-Type: application/pdf');
             header('Content-Disposition: attachment; filename="Mapa_Carregamento.pdf"');
             header('Cache-Control: no-cache, no-store, must-revalidate');
@@ -204,12 +204,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Expires: 0');
 
             // Envia o arquivo PDF para o navegador
-            $pdf->Output('I', 'Mapa_Carregamento.pdf');  // 'I' para visualizaÃ§Ã£o no navegador, 'D' para download
+            $pdf->Output('I', 'Mapa_Carregamento.pdf');  // 'I' para visualização no navegador, 'D' para download
             exit;
         } else {
-            // Caso nÃ£o haja produtos
+            // Caso não haja produtos
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['erro' => 'Nenhum produto encontrado para os critÃ©rios informados.']);
+            echo json_encode(['erro' => 'Nenhum produto encontrado para os critérios informados.']);
             exit;
         }
     } else {
@@ -219,9 +219,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 } else {
-    // Se a requisiÃ§Ã£o nÃ£o for POST
+    // Se a requisição não for POST
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['erro' => 'Erro: MÃ©todo de requisiÃ§Ã£o invÃ¡lido.']);
+    echo json_encode(['erro' => 'Erro: Método de requisição inválido.']);
     exit;
 }
 ?>
