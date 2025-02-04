@@ -148,8 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         return row;
                     });
     
-                    // Agora você tem os dados do Excel com as colunas "Data produção" e "Data vencimento" em formato de data de banco de dados
-                    // console.log(jsonData);
+            
     
                     // Envie 'jsonData' para o servidor via AJAX
                     if (jsonData.length > 0) {
@@ -162,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         })
                         .then(response => response.text())
                         .then(data => {
+                            console.log(data);
                             document.getElementById('outputAuroraExcel').innerHTML = data;
                         })    
                         .catch(error => {
@@ -177,6 +177,56 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+
+    document.getElementById('scanButtonSaudali').addEventListener('click', function () {
+         console.log('Botão foi clicado Saudali.');
+    
+        const xmlForm = document.getElementById('xmlFormSaudali');
+        const outputDiv = document.getElementById('outputSaudali');
+        const loadingDiv = document.getElementById('loadingSaudali');
+        const progressBar = document.getElementById('progressBarSaudali');
+    
+        const formData = new FormData(xmlForm);
+    
+        // Obter os valores dos campos de data e número
+        const dataSaudali = document.getElementById('dataSaudali').value;
+        const cargaSaudali = document.getElementById('cargaSaudali').value;
+    
+        // Adicionar os valores aos dados do formulário
+        formData.append('dataSaudali', dataSaudali);
+        formData.append('cargaSaudali', cargaSaudali);
+    
+        // Verifique se existem arquivos anexados antes de enviar a solicitação
+        if (formData.has('xmlSaudaliFilesInput[]')) {
+            console.log("existe arquivo");
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'processSaudali.php', true);
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable) {
+                    const percent = (e.loaded / e.total) * 100;
+                    progressBar.value = percent;
+                }
+            };
+            xhr.onloadstart = function () {
+                progressBar.classList.remove('hide');
+                loadingDiv.classList.remove('hide');
+                progressBar.value = 0;
+            };
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    loadingDiv.classList.add('hide');
+                    progressBar.classList.add('hide');
+                    progressBar.value = 100;
+                    outputDiv.innerHTML = xhr.responseText;
+                }
+            };
+            xhr.send(formData);
+            // console.log(formData);
+        } else {
+            alert('Nenhum arquivo selecionado para envio.');
+        }
+    });
+
 
     document.getElementById('scanButtonCruzeiro').addEventListener('click', function () {
         // console.log('Botão foi clicado cruzeiro.');

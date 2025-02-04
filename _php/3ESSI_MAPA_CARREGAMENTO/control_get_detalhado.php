@@ -22,30 +22,31 @@ try {
 
         // SQL para buscar os dados, incluindo o campo reentrega
         $sql = "SELECT
-                    n.id_monitoramento,
-                    m.placa_caminhao,
-                    p.cod,
-                    nc.sequencia,
-                    p.descricao,
-                    p.nf,
-                    ROUND(SUM(p.quantidade), 2) AS Peso,
-                    SUM(p.QuantAux) AS quantidade,
-                    MAX(p.data_producao) AS data_producao,
-                    MAX(p.data_validade) AS data_validade,
-                    MAX(n.fornecedor) AS fornecedor,
-                    CASE
-                        WHEN n.reentrega = 'S' THEN 'S'
-                        ELSE 'N'  -- Para o caso de ser NULL ou outro valor
-                    END AS reentrega
-                FROM produtos p
-                LEFT JOIN notas n ON p.nf = n.n_nota AND n.id_monitoramento = :id_monitoramento
-                LEFT JOIN monitoramento m ON n.id_monitoramento = m.id
-                LEFT JOIN cruzeiro_notas nc ON n.n_nota = nc.fk_notas_n_nota
-                WHERE m.placa_caminhao = :placa
-                AND m.largada = :dataLancamento
-                AND n.id_monitoramento = :id_monitoramento
-                GROUP BY p.cod, n.id_monitoramento, n.reentrega
-                ORDER BY n.reentrega DESC, p.nf ASC;";
+            n.id_monitoramento,
+            m.placa_caminhao,
+            p.cod,
+            nc.sequencia,
+            p.descricao,
+            p.nf,
+            ROUND(SUM(p.quantidade), 2) AS Peso,
+            SUM(p.QuantAux) AS quantidade,
+            p.data_producao,
+            p.data_validade,
+            MAX(n.fornecedor) AS fornecedor,
+            CASE
+                WHEN n.reentrega = 'S' THEN 'S'
+                ELSE 'N'  -- Para o caso de ser NULL ou outro valor
+            END AS reentrega
+        FROM produtos p
+        LEFT JOIN notas n ON p.nf = n.n_nota AND n.id_monitoramento = :id_monitoramento
+        LEFT JOIN monitoramento m ON n.id_monitoramento = m.id
+        LEFT JOIN cruzeiro_notas nc ON n.n_nota = nc.fk_notas_n_nota
+        WHERE m.placa_caminhao = :placa
+        AND m.largada = :dataLancamento
+        AND n.id_monitoramento = :id_monitoramento
+        GROUP BY p.cod, p.data_producao, p.data_validade, n.id_monitoramento, n.reentrega
+        ORDER BY n.reentrega DESC, p.cod ASC, p.nf ASC;";
+
 
         // Preparando a consulta e vinculando os parâmetros
         $stmt = $pdo->prepare($sql);

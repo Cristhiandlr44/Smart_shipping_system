@@ -85,20 +85,22 @@ if (!empty($_FILES['xmlFilesInput']['tmp_name'])) {
                     $xProd = (string) $det->prod->xProd;
                     $uTrib = (string) $det->prod->uTrib;
                     $qTrib = (string) $det->prod->qTrib;
-
+                
                     // Extrair o conteúdo de <infAdProd>
                     $infAdProd = (string) $det->infAdProd;
-
-                    // Use uma expressão regular para encontrar o número após 'Qtde:'
-                    if (preg_match('/Qtde:\s*([\d.]+)\s*/', $infAdProd, $matches)) {
-                        $numero = $matches[1];
+                
+                    // Usar expressão regular para encontrar a quantidade e a unidade auxiliar
+                    if (preg_match('/Qtde:\s*([\d.]+)(\w+)\s*/', $infAdProd, $matches)) {
+                        $numero = $matches[1];  // A quantidade auxiliar (número)
+                        $unidadeAux = $matches[2];  // A unidade auxiliar
                     } else {
-                        // Defina um valor padrão se não encontrar o número
+                        // Defina valores padrão se não encontrar a quantidade e unidade
                         $numero = 'N/A';
+                        $unidadeAux = 'N/A';
                     }
-
-                    $sqlProdutos = "INSERT INTO produtos (cod, nf, descricao, unidade, quantidade, QuantAux)
-                            VALUES (:cod, :nf, :descricao, :unidade, :quantidade, :QuantAux)";
+                
+                    $sqlProdutos = "INSERT INTO produtos (cod, nf, descricao, unidade, quantidade, QuantAux, UnidadeAuxiliar)
+                                    VALUES (:cod, :nf, :descricao, :unidade, :quantidade, :QuantAux, :unidadeAux)";
                     $stmtProdutos = $pdo->prepare($sqlProdutos);
                     $stmtProdutos->bindParam(':cod', $cProd);
                     $stmtProdutos->bindParam(':nf', $nNF);
@@ -106,9 +108,10 @@ if (!empty($_FILES['xmlFilesInput']['tmp_name'])) {
                     $stmtProdutos->bindParam(':unidade', $uTrib);
                     $stmtProdutos->bindParam(':quantidade', $qTrib);
                     $stmtProdutos->bindParam(':QuantAux', $numero);
+                    $stmtProdutos->bindParam(':unidadeAux', $unidadeAux);
                     $stmtProdutos->execute();
                 }
-
+                
                 // Commit da transação
                 $pdo->commit();
             } catch (Exception $e) {

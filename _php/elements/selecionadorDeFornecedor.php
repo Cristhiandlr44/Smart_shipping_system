@@ -4,9 +4,13 @@
         <option selected>Escolha</option>
         <option value="Dellys">Dellys - XML</option>
         <option value="Aurora">Aurora - XML / Excel</option>
+        <option value="Saudali">Saudali - XML</option>
+        <!--
+
         <option value="Cruzeiro">Cruzeiro - XML</option>
         <option value="Suinco">Suinco - XML</option>
         <option value="Plena">Plena - Excel</option>
+        -->
         <!-- <option value="5">Total</option> -->
     </select>
 </div>

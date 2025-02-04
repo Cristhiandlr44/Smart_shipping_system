@@ -1,3 +1,88 @@
+// Função para gerar o relatório com os detalhes da viagem e itens devolvidos agrupados por nota
+function gerarRelatorioCompleto(placa, largada, id_monitoramento) {
+    console.log("ID Viagem: ", id_monitoramento, "placa: ", placa, "Largada: ", largada);  // Verificando o ID
+
+    $.ajax({
+        url: "gerar_relatorio_mapa.php",
+        type: "POST",
+        data: {
+            dataLancamento: largada,
+            permission: 1,
+            placa: placa,
+            id_monitoramento: id_monitoramento
+        },
+        xhrFields: {
+            responseType: 'blob'  // Espera um Blob como resposta
+        },
+        success: function(response, status, xhr) {
+            console.log("Resposta do servidor: ", response);
+
+            // Verificando o tipo de resposta
+            const contentType = xhr.getResponseHeader('Content-Type');
+            console.log("Content-Type da resposta: ", contentType);
+
+            if (contentType && contentType.includes('application/pdf')) {
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(response);
+                link.href = url;
+                link.download = 'Mapa_Carregamento.pdf';  // Nome do arquivo
+                link.click();  // Simula o clique para download
+                URL.revokeObjectURL(url);  // Libera a URL do blob após o download
+            } else {
+                console.log("Erro: Resposta inesperada, não é um arquivo PDF.");
+                alert("Erro: O arquivo retornado não é um PDF. Tipo de resposta: " + contentType);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.log("Erro na requisição: ", status, error);
+            alert("Erro na requisição: " + error);
+        }
+    });
+}
+
+
+function gerarRomaneio(placa, largada, id_monitoramento) {
+    console.log("ID Viagem: ", id_monitoramento, "placa: ", placa, "Largada: ", largada);  // Verificando o ID
+
+    $.ajax({
+        url: "gerar_relatorio_romaneio.php",
+        type: "POST",
+        data: {
+            dataLancamento: largada,
+            permission: 1,
+            placa: placa,
+            id_monitoramento: id_monitoramento
+        },
+        xhrFields: {
+            responseType: 'blob'  // Espera um Blob como resposta
+        },
+        success: function(response, status, xhr) {
+            console.log("Resposta do servidor: ", response);
+
+            // Verificando o tipo de resposta
+            const contentType = xhr.getResponseHeader('Content-Type');
+            console.log("Content-Type da resposta: ", contentType);
+
+            if (contentType && contentType.includes('application/pdf')) {
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(response);
+                link.href = url;
+                link.download = 'Mapa_Carregamento.pdf';  // Nome do arquivo
+                link.click();  // Simula o clique para download
+                URL.revokeObjectURL(url);  // Libera a URL do blob após o download
+            } else {
+                console.log("Erro: Resposta inesperada, não é um arquivo PDF.");
+                alert("Erro: O arquivo retornado não é um PDF. Tipo de resposta: " + contentType);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.log("Erro na requisição: ", status, error);
+            alert("Erro na requisição: " + error);
+        }
+    });
+}
+
+
 $(document).ready(() => {
     $.ajax({
         url: '../elements/E_navbar.php',
@@ -51,6 +136,10 @@ $(document).ready(() => {
                                         onclick="abrirModalDetalhado('${monitoramento.placa}', '${dataLancamento}','${monitoramento.idMonitoramento}')">
                                     Ver Detalhado
                                 </button>
+                                
+                                <button class="btn btn-primary" onclick="gerarRelatorioCompleto('${monitoramento.placa}', '${dataLancamento}','${monitoramento.idMonitoramento}')">Gerar Mapa de Carregamento</button>
+                                <button class="btn btn-primary" onclick="gerarRomaneio('${monitoramento.placa}', '${dataLancamento}','${monitoramento.idMonitoramento}')">Gerar Romaneio </button>
+            
                             </div>
                         </div>
                     `;
@@ -152,7 +241,6 @@ $(document).ready(() => {
             }
         });
     };
-
 
 
 

@@ -56,8 +56,12 @@
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalDetalhadoLabel">Mapa Detalhado</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                   
                 </div>
+               
                 <div class="modal-body">
+                      <!-- Botão no cabeçalho -->
+                 
                     <!-- Tabela para entregas normais -->
                     <h5>Entregas Normais</h5>
                     <table id="tabelaDetalhado" class="table table-bordered">
@@ -102,7 +106,9 @@
         </div>
     </div>
 
-
+    <script>
+        
+    </script>
 
     <script src="../../_scriptjs/script_get_products_2.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
