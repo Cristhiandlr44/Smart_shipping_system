@@ -9,8 +9,8 @@
        exit();
    }
    
-    include("conexao.php");
-    $conn = mysqli_criar();
+   include("/var/www/html/Smart_shipping_system-master/CRUD/conexao.php");
+   $conn = mysqli_criar();
     $sqlBusca = "SELECT * FROM usuarios WHERE usuario = '{$usuario}' AND senha = '{$senha}'";
     $res = mysqli_query($conn, $sqlBusca);
     $row = $res->fetch_object();
