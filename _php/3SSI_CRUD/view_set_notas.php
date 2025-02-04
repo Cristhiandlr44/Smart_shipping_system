@@ -1,9 +1,5 @@
 <?php
-    $relative = "../";
-    require_once($relative."CRUD/relog.php");
-    if($_SESSION["tipo"] != 1){
-        print("<script>alert('Acesso não autorizado!');location.href='../home.php'</script>");
-    }
+    require_once("../3SSI_CRUD/conexao.php");
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
