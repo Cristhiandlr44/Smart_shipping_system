@@ -20,7 +20,6 @@ $relative = isset($_POST['relative']) ? $_POST['relative'] : '';
     echo '<li class="nav-item dropdown">
       <a class="nav-link dropdown-toggle" style="padding-bottom: 13px;" id="notas-dropdown" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Notas</a>
       <div class="dropdown-menu" style="background-color: white; padding: 5px 0; margin-top: -7px;">
-        
         <a class="dropdown-item" id="notas-tab" href="'.$relative.'3SSI_CRUD/view_set_notas.php">Inserir</a>
         <a class="dropdown-item" id="notas-tab" href="'.$relative.'3ESSI_NOTAS_MONITORAMENTO/view_get_notas_2.php">Roterizador</a>
         <a class="dropdown-item" id="notas-tab" href="'.$relative.'3ESSI_NOTAS_MONITORAMENTO/view_altera_clientes.php">Alterar Clientes</a>
