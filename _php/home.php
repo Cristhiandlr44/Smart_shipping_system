@@ -30,11 +30,11 @@
                     require_once("elements/tituloProjetoMainSection.php");
                 ?>
                 <p>
-                    Bem vindo a página inicial do sistema! <br><Br>Aqui pode ser feito o controle de dados fiscais a cerca dos serviços prestados pela empresa de entregas. Além disso, contamos com um sistema de controle de Motoristas, de Caminhões sendo utilizados.
+                    Bem vindo a página inicial do sistema! <br><Br>Faça o planejamento de suas entregas de maneria Ágil e Rapida!
                 </p>
                 <hr>
                 <p>
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Illo amet vel praesentium corrupti, fugit doloremque, delectus natus ratione assumenda aut porro quis unde error deserunt animi laudantium? Accusantium, dolore odio.
+                Na MULTI SERVICE, transformamos a logística em uma experiência prática, eficiente e transparente. Nossas unidades são localizadas estrategicamente em Minas Gerais e Bahia, oferecemos soluções completas em transporte e armazenagem, tanto seco, quanto frigorificado. Nossa equipe altamente capacitada e dedicada, combinada com tecnologia de ponta, garante entregas precisas e monitoramento em tempo real.
                 </p>
                 <br style="margin-bottom: 20px;">
                 <br><br><br><br><br><br><br>
