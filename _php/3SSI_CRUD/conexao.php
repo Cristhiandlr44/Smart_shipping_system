@@ -3,7 +3,7 @@ header("Content-type: text/html; charset=utf-8");
 
 $host = 'localhost';
 $user = 'root'; 
-$password = ''; 
+$password = 'smartShipping'; 
 $database = 'seminariobd';
 
 $permission = isset($_POST['permission'])? $_POST['permission']: 0;
