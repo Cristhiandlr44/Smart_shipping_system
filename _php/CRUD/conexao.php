@@ -2,7 +2,7 @@
 header("Content-type: text/html; charset=utf-8"); 
 $HOST = "localhost";
 $USER = "root";
-$PASS = "qqeqszwmbiXSSmq9";
+$PASS = "smartShipping";
 $BASE = 'seminariobd';
 
 function mysqli_criar(){
