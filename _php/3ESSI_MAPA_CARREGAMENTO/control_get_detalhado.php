@@ -25,7 +25,7 @@ try {
             n.id_monitoramento,
             m.placa_caminhao,
             p.cod,
-            nc.sequencia,
+            
             p.descricao,
             p.nf,
             ROUND(SUM(p.quantidade), 2) AS Peso,
@@ -44,7 +44,7 @@ try {
         WHERE m.placa_caminhao = :placa
         AND m.largada = :dataLancamento
         AND n.id_monitoramento = :id_monitoramento
-        GROUP BY p.cod, p.data_producao, p.data_validade, n.id_monitoramento, n.reentrega
+        GROUP BY p.cod, p.data_producao, p.data_validade, n.id_monitoramento, n.reentrega, p.descricao, p.nf
         ORDER BY n.reentrega DESC, p.cod ASC, p.nf ASC;";
 
 

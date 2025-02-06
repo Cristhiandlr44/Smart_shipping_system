@@ -31,7 +31,7 @@ try {
     // Consulta para as rotas das redes
     $sqlRotasRedes = "
             SELECT 
-                n.rota,
+               
                 c.nome AS Cliente,
                 COUNT(*) AS quantidadeNotas,
                 COUNT(DISTINCT n.n_nota) AS quantidadeEntregas,
@@ -59,13 +59,26 @@ try {
     $stmtRotasRedes->execute();
     $rotasRedes = $stmtRotasRedes->fetchAll(PDO::FETCH_ASSOC);
 
+  
+
     // Preparando os dados de resposta
     $response = [
         'rotas' => $rotas,  // Rotas normais
         'rotasRedes' => $rotasRedes  // Rotas das redes
     ];
-
-    echo json_encode($response);
+    array_walk_recursive($response, function (&$item) {
+        if (!mb_check_encoding($item, 'UTF-8')) {
+            $item = utf8_encode($item);  // Converte para UTF-8
+        }
+    });
+    
+  
+    $jsonResponse = json_encode($response);
+    if ($jsonResponse === false) {
+        echo json_encode(['error' => 'Erro ao codificar os dados em JSON']);
+    } else {
+        echo $jsonResponse;
+    }
 
 } catch (Exception $e) {
     http_response_code(500); // Erro de servidor

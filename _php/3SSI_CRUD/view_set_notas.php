@@ -61,6 +61,7 @@
         <div class="dash col-lg-4 offset-lg-4 bg-white">
             <div class="row p-3">
                 <?php 
+		    $relative = "../";
                     $title = "- Escaner de Notas Fiscais";
                     require_once($relative. "elements/tituloProjetoMainSection.php");
                     require_once($relative. "elements/selecionadorDeFornecedor.php");

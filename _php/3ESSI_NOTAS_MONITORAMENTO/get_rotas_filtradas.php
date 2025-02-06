@@ -50,7 +50,7 @@ try {
     // Consulta para as rotas das redes
     $sqlRotasRedes = "
         SELECT 
-            n.rota,
+          
             c.nome AS Cliente,
             COUNT(*) AS quantidadeNotas,
             COUNT(DISTINCT c.nome) AS quantidadeEntregas,
@@ -84,7 +84,11 @@ try {
         'rotas' => $rotas,  // Rotas dos fornecedores
         'rotasRedes' => $rotasRedes  // Rotas das redes
     ];
-
+    array_walk_recursive($response, function (&$item) {
+        if (!mb_check_encoding($item, 'UTF-8')) {
+            $item = utf8_encode($item);  // Converte para UTF-8
+        }
+    });
     // Retorna os dados em formato JSON
     echo json_encode($response);
 

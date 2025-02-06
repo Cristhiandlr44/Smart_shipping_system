@@ -1,6 +1,6 @@
 <?php
     require_once("../3SSI_CRUD/conexao.php");
-    $sql = "SELECT * FROM `Visao_MotoristasCaminhoes` WHERE 1";
+    $sql = "SELECT * FROM `visao_motoristascaminhoes` WHERE 1";
     $stmt = $pdo->prepare($sql);
     
     try{

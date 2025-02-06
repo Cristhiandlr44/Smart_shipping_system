@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             n.id_monitoramento,
             m.placa_caminhao,
             p.cod,
-            nc.sequencia,
+            
             p.descricao,
             p.nf,
             ROUND(SUM(CASE WHEN p.item_alterado IS NULL THEN p.quantidade ELSE 0 END), 2) AS Peso,
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         WHERE m.placa_caminhao = ?
         AND m.largada = ?
         AND n.id_monitoramento = ?
-        GROUP BY p.cod, p.data_producao, p.data_validade, n.id_monitoramento, n.reentrega, p.item_alterado
+        GROUP BY p.cod, p.data_producao, p.data_validade, n.id_monitoramento, n.reentrega, p.item_alterado, p.descricao, p.nf
         ORDER BY p.nf ASC, p.cod ASC,  n.reentrega DESC";
 
     // Prepara e executa a consulta

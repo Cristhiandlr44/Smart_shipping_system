@@ -67,7 +67,7 @@ $sqlItens = "
     WHERE 
         m.id = ?  
     GROUP BY 
-        a.nf, a.cod_item, a.quantidade
+        a.nf, a.cod_item, a.quantidade, a.tipo,a.unidade, a.peso
 ";
 $stmt = $conn->prepare($sqlItens);
 $stmt->bind_param('i', $viagemId);  // 'i' indica que o parâmetro é um inteiro
