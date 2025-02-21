@@ -7,9 +7,9 @@ if (isset($_GET['idMonitoramento'])) {
     $idMonitoramento = $_GET['idMonitoramento'];
 
     // Consulta para buscar todas as notas fiscais associadas ao ID do monitoramento
-    $sql = "SELECT n_nota FROM notas WHERE id_monitoramento = ?";
+    $sql = "SELECT n_nota FROM notas WHERE id_monitoramento = ? OR id_monitoramento2 = ? OR id_monitoramento3 = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $idMonitoramento);
+    $stmt->bind_param("iii", $idMonitoramento, $idMonitoramento, $idMonitoramento);
     
     if ($stmt->execute()) {
         $result = $stmt->get_result();

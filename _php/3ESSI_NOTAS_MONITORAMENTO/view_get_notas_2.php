@@ -69,10 +69,30 @@
                                 echo "
                                 <div class='row'>
                                     <p class='col-sm-8 offset-sm-2 col-md-11 offset-md-1' style='font-size: 1.5em;text-align: center;'>Selecione uma rota para Carregamento</p>
+                                    
                                 </div>";
                             }
                 ?>         
-              
+              <div class="btn-group">
+                                    <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Gerar Mapa de Carregamento Parados
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="gerarRelatorioCompletoParados()">PDF</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="gerarMapaXLSParados()">XLS</a></li>
+                                    </ul>
+                                </div>
+    
+                                <!-- Botão dropdown para Romaneio -->
+                                <div class="btn-group">
+                                    <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Gerar Romaneios Parados
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="gerarRomaneioParados()">PDF</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="gerarRomaneioXLSParados()">XLS clientes</a></li><li><a class="dropdown-item" href="#" onclick="gerarRomaneioItensXLS()">XLS itens</a></li>
+                                    </ul>
+                                </div>
               <div class="container mt-5">
                 <h3>Filtrar por Fornecedor</h3>
                 

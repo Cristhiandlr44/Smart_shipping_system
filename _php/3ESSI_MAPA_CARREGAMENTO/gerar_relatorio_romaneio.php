@@ -2,15 +2,16 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-ob_start(); // Inicia o buffer de saÌda
+ob_start(); // Inicia o buffer de sa√≠da
 
 require_once('../CRUD/relog.php');
 require('../../fpdf/fpdf.php');  // Caminho correto para o FPDF
 
-// Verifica se È um mÈtodo POST
+// Verifica se √© um m√©todo POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Recebendo os dados da requisiÁ„o POST
+    // Recebendo os dados da requisi√ß√£o POST
     $dataLancamento = isset($_POST['dataLancamento']) ? $_POST['dataLancamento'] : '';
+    
     $placa = isset($_POST['placa']) ? $_POST['placa'] : '';
     $id_monitoramento = isset($_POST['id_monitoramento']) ? $_POST['id_monitoramento'] : '';
 
@@ -22,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $sql = "SELECT p.*, n.fornecedor
+    $sql = "SELECT p.*, n.fornecedor, n.reentrega, n.data_lancamento
             FROM produtos p
             INNER JOIN notas n ON p.nf = n.n_nota
             WHERE n.id_monitoramento = ? AND p.item_alterado IS NULL
@@ -34,20 +35,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Verifica se a consulta foi executada com sucesso
     if ($stmt->execute()) {
-        // ObtÈm o resultado dos produtos
+        // Obt√©m o resultado dos produtos
         $result = $stmt->get_result();
         $produtos = $result->fetch_all(MYSQLI_ASSOC);
 
-        // Verifica se h· produtos
+        // Verifica se h√° produtos
         if (count($produtos) > 0) {
-            // Agrupar os resultados por tipo de reentrega
-            $produtosAgrupados = ['armazem' => [], 'normais' => []];
+            // Agrupar os resultados por tipo de reentrega e data de lan√ßamento
+            $produtosAgrupados = ['armazem' => [], 'carga_parada' => [], 'normais' => []];
+            $dataAtual = new DateTime();
+            $dataMenorCargaParada = null;  // Vari√°vel para armazenar a menor data de carga parada
 
             foreach ($produtos as $produto) {
-                // Separar os itens de reentrega (S) e itens normais (N)
-                if ($produto['reentrega'] === 'S') {
+                $dataLancamentoProduto = new DateTime($produto['data_lancamento']);
+                $intervalo = $dataLancamentoProduto->diff($dataAtual)->days;
+
+                if ($intervalo >= 2) {
+                    // Agrupando produtos como carga parada
+                    $produtosAgrupados['carga_parada'][] = $produto;
+                    // Verificando a menor data de lan√ßamento para carga parada
+                    if ($dataMenorCargaParada === null || $dataLancamentoProduto < $dataMenorCargaParada) {
+                        $dataMenorCargaParada = $dataLancamentoProduto;
+                    }
+                } elseif ($produto['reentrega'] === 'S') {
+                    // Agrupando produtos como armaz√©m (reentrega)
                     $produtosAgrupados['armazem'][] = $produto;
                 } else {
+                    // Agrupando produtos como normais
                     $produtosAgrupados['normais'][] = $produto;
                 }
             }
@@ -65,22 +79,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Cria o objeto PDF
             $pdf = new FPDF();
-            $pdf->SetAutoPageBreak(true, 10);  // Habilitar quebra autom·tica de p·gina
+            $pdf->SetAutoPageBreak(true, 10);  // Habilitar quebra autom√°tica de p√°gina
             $pdf->AddPage();
             $pdf->SetFont('Arial', 'B', 12);
 
-            // CabeÁalho do PDF
+            // Cabe√ßalho do PDF
             $pdf->Cell(0, 10, 'Placa: ' . $placa, 0, 1);
             $pdf->Cell(0, 10, 'Id Monitoramento: ' . $id_monitoramento, 0, 1);
             $pdf->Cell(0, 10, 'Data Largada: ' . $dataLancamento, 0, 1);
-            
-            // C·lculos do peso e volume
+
+            // C√°lculos do peso e volume
             $totalPeso = array_sum(array_column($produtos, 'quantidade'));
             $totalVolume = array_sum(array_column($produtos, 'QuantAux'));
             $pdf->Cell(0, 10, 'Peso Total: ' . number_format($totalPeso, 2), 0, 1);
             $pdf->Cell(0, 10, 'Volume Total: ' . number_format($totalVolume, 2), 0, 1);
+            $pdf->Ln(10);
 
-            // EspaÁo para separar o cabeÁalho da tabela de produtos
+                // Tabela de Dados dos Clientes
+                $pdf->SetFont('Arial', 'B', 12);
+                $pdf->Cell(0, 10, 'Dados dos Clientes', 0, 1, 'C');
+                $pdf->SetFont('Arial', '', 8);
+                $pdf->Cell(15, 6, 'NF', 1);   
+                $pdf->Cell(40, 6, 'Nome', 1);
+                $pdf->Cell(40, 6, 'Endereco', 1);
+                $pdf->Cell(12, 6, 'Numero', 1);
+                $pdf->Cell(30, 6, 'Bairro', 1);
+                $pdf->Cell(25, 6, 'Cidade', 1);
+                $pdf->Cell(15, 6, 'Peso', 1);
+                $pdf->Cell(15, 6, 'Valor Nf', 1);
+                $pdf->Ln();
+                    
+                // Preenche a tabela com os dados dos clientes
+                foreach ($clientes as $cliente) {
+                    $pdf->Cell(15, 6, $cliente['n_nota'], 1);
+
+                    $nome = $cliente['nome'];
+                    if (strlen($nome) > 20) {
+                        $nome= substr($nome, 0, 20);
+                    }
+                    $pdf->Cell(40, 6, $nome, 1);
+
+                    $rua = $cliente['rua'];
+                    if (strlen($rua) > 20) {
+                        $rua= substr($rua, 0, 20);
+                    }
+                    $pdf->Cell(40, 6, $rua, 1);
+
+                    $pdf->Cell(12, 6, $cliente['numero'], 1);
+
+                    $bairro = strlen($cliente['bairro']) > 15 ? substr($cliente['bairro'], 0, 15) : $cliente['bairro'];
+                    $pdf->Cell(30, 6, $bairro, 1);
+
+                    $cidade = strlen($cliente['cidade']) > 15 ? substr($cliente['cidade'], 0, 19) : $cliente['cidade'];
+                    $pdf->Cell(25, 6, $cidade, 1);
+
+                    $pdf->Cell(15, 6, $cliente['peso_bruto'], 1);
+                    $pdf->Cell(15, 6, $cliente['valor_nota'], 1);
+
+                    $pdf->Ln();
+                }
+                $pdf->Ln(10);    
+            // Espa√ßo para separar o cabe√ßalho da tabela de produtos
             $pdf->Ln(10);
 
             // Tabela Entrega Regular (Produtos Normais)
@@ -117,111 +176,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdf->Ln();
             }
 
-            // EspaÁo entre as tabelas de produtos e dados dos clientes
+            // Espa√ßo entre as tabelas de produtos e dados dos clientes
             $pdf->Ln(10);
-            // Tabela Galp„o (ArmazÈm)
-            $pdf->SetFont('Arial', 'B', 12);
-            $pdf->Cell(0, 10, 'Galpao (Armazem)', 0, 1, 'C');
-            $pdf->SetFont('Arial', '', 8);
-            $pdf->Cell(15, 6, 'Operacao', 1);
-            $pdf->Cell(15, 6, 'NF', 1);
-            $pdf->Cell(20, 6, 'Codigo', 1);
-            $pdf->Cell(55, 6, 'Descricao', 1);
-            $pdf->Cell(15, 6, 'Peso', 1);
-            $pdf->Cell(15, 6, 'Qnt', 1);
-            $pdf->Cell(10, 6, 'tipo', 1);
-            $pdf->Cell(25, 6, 'Data Producao', 1);
-            $pdf->Cell(25, 6, 'Data Validade', 1);
-            $pdf->Ln();
-
-            // Preenche a tabela Galp„o com os dados
-            foreach ($produtosAgrupados['armazem'] as $produto) {
-                $operacao = $produto['fornecedor'];
-                $pdf->Cell(15, 6, $operacao, 1);
-                $pdf->Cell(15, 6, $produto['nf'], 1);
-                $pdf->Cell(20, 6, $produto['cod'], 1);
-                $descricao = $produto['descricao'];
-                if (strlen($descricao) > 28) {
-                    $descricao = substr($descricao, 0, 28);
-                }
-                // Exibe a descriÁ„o truncada
-                $pdf->Cell(55, 6, $descricao, 1);
-
-                $pdf->Cell(15, 6, number_format($produto['Peso'], 2), 1);
-                $pdf->Cell(15, 6, $produto['quantidade'], 1);
-                $pdf->Cell(10, 6, $produto['UnidadeAuxiliar'], 1);
-                $pdf->Cell(25, 6, $produto['data_producao'], 1);
-                $pdf->Cell(25, 6, $produto['data_validade'], 1);
+            
+            // Tabela Galp√£o (Armaz√©m)
+            if (!empty($produtosAgrupados['armazem'])) {
+                $pdf->SetFont('Arial', 'B', 12);
+                $pdf->Cell(0, 10, 'Galpao (Armazem)', 0, 1, 'C');
+                $pdf->SetFont('Arial', '', 8);
+                $pdf->Cell(15, 6, 'Operacao', 1);
+                $pdf->Cell(15, 6, 'NF', 1);
+                $pdf->Cell(20, 6, 'Codigo', 1);
+                $pdf->Cell(55, 6, 'Descricao', 1);
+                $pdf->Cell(15, 6, 'Peso', 1);
+                $pdf->Cell(15, 6, 'Qnt', 1);
+                $pdf->Cell(10, 6, 'Tipo', 1);
+                $pdf->Cell(25, 6, 'Data Producao', 1);
+                $pdf->Cell(25, 6, 'Data Validade', 1);
                 $pdf->Ln();
+                
+                // Preenche a tabela Galp√£o com os dados dos produtos
+                foreach ($produtosAgrupados['armazem'] as $produto) {
+                    $pdf->Cell(15, 6, $produto['fornecedor'], 1);
+                    $pdf->Cell(15, 6, $produto['nf'], 1);
+                    $pdf->Cell(20, 6, $produto['cod'], 1);
+                    $descricao = $produto['descricao'];
+                    if (strlen($descricao) > 28) {
+                        $descricao = substr($descricao, 0, 28);
+                    }
+                    $pdf->Cell(55, 6, $descricao, 1);
+                    $pdf->Cell(15, 6, number_format($produto['quantidade'], 2), 1);
+                    $pdf->Cell(15, 6, $produto['QuantAux'], 1);
+                    $pdf->Cell(10, 6, $produto['UnidadeAuxiliar'], 1);
+                    $pdf->Cell(25, 6, $produto['data_producao'], 1);
+                    $pdf->Cell(25, 6, $produto['data_validade'], 1);
+                    $pdf->Ln();
+                }
             }
 
+            // Espa√ßo entre as tabelas de produtos e dados dos clientes
             $pdf->Ln(10);
-
-            // Tabela de Dados dos Clientes
-            $pdf->SetFont('Arial', 'B', 12);
-            $pdf->Cell(0, 10, 'Dados dos Clientes', 0, 1, 'C');
-            $pdf->SetFont('Arial', '', 8);
-            $pdf->Cell(15, 6, 'NF', 1);   
-            $pdf->Cell(40, 6, 'Nome', 1);
-            $pdf->Cell(40, 6, 'Endereco', 1);
-            $pdf->Cell(12, 6, 'Numero', 1);
-            $pdf->Cell(30, 6, 'Bairro', 1);
-            $pdf->Cell(25, 6, 'Cidade', 1);
-            $pdf->Cell(15, 6, 'Peso', 1);
-            $pdf->Cell(15, 6, 'Valor Nf', 1);
-            $pdf->Ln();
-
-            // Preenche a tabela com os dados dos clientes
-            foreach ($clientes as $cliente) {
-                $pdf->Cell(15, 6, $cliente['n_nota'], 1);
-                $nome = $cliente['nome'];
-                if (strlen($nome) > 22) {
-                    $nome= substr($nome, 0, 22);
-                }
-                $pdf->Cell(40, 6, $nome, 1);
-                $rua = $cliente['rua'];
-                if (strlen($rua) > 22) {
-                    $rua= substr($rua, 0, 22);
-                }
-                $pdf->Cell(40, 6, $rua, 1);
-                $pdf->Cell(12, 6, $cliente['numero'], 1);
-                $pdf->Cell(30, 6, $cliente['bairro'], 1);
-                $pdf->Cell(25, 6, $cliente['cidade'], 1);
-                $pdf->Cell(15, 6, $cliente['peso_bruto'], 1);
-                $pdf->Cell(15, 6, $cliente['valor_nota'], 1);
-
+            
+            // Tabela Carga Parada
+            if (!empty($produtosAgrupados['carga_parada'])) {
+                $pdf->SetFont('Arial', 'B', 12);
+                $pdf->Cell(0, 10, 'Carga Parada', 0, 1, 'C');
+                $pdf->SetFont('Arial', '', 8);
+                $pdf->Cell(15, 6, 'Operacao', 1);
+                $pdf->Cell(15, 6, 'NF', 1);
+                $pdf->Cell(20, 6, 'Codigo', 1);
+                $pdf->Cell(55, 6, 'Descricao', 1);
+                $pdf->Cell(15, 6, 'Peso', 1);
+                $pdf->Cell(15, 6, 'Qnt', 1);
+                $pdf->Cell(10, 6, 'Tipo', 1);
+                $pdf->Cell(25, 6, 'Data Producao', 1);
+                $pdf->Cell(25, 6, 'Data Validade', 1);
                 $pdf->Ln();
-            }
+                
+                // Preenche a tabela Carga Parada com os dados dos produtos
+                foreach ($produtosAgrupados['carga_parada'] as $produto) {
+                    $pdf->Cell(15, 6, $produto['fornecedor'], 1);
+                    $pdf->Cell(15, 6, $produto['nf'], 1);
+                    $pdf->Cell(20, 6, $produto['cod'], 1);
+                    $descricao = $produto['descricao'];
+                    if (strlen($descricao) > 28) {
+                        $descricao = substr($descricao, 0, 28);
+                    } $descricao = $produto['descricao'];
+                   
+                    $pdf->Cell(55, 6, $descricao, 1);
+                    $pdf->Cell(15, 6, number_format($produto['quantidade'], 2), 1);
+                    $pdf->Cell(15, 6, $produto['QuantAux'], 1);
+                    $pdf->Cell(10, 6, $produto['UnidadeAuxiliar'], 1);
+                    $pdf->Cell(25, 6, $produto['data_producao'], 1);
+                    $pdf->Cell(25, 6, $produto['data_validade'], 1);
+                    $pdf->Ln();
+                }
+            }    
+                
 
-            // Limpa o buffer de saÌda antes de enviar os cabeÁalhos
-            ob_end_clean();
 
-            // Definir cabeÁalhos para o PDF
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="Mapa_Carregamento.pdf"');
-            header('Cache-Control: no-cache, no-store, must-revalidate');
-            header('Pragma: no-cache');
-            header('Expires: 0');
-
-            // Envia o arquivo PDF para o navegador
-            $pdf->Output('I', 'Mapa_Carregamento.pdf');  // 'I' para visualizaÁ„o no navegador, 'D' para download
-            exit;
+            // Gera o PDF
+            $pdf->Output('I', 'Romaneio_Notas' . $placa . '.pdf');
         } else {
-            // Caso n„o haja produtos
+            // Exibe mensagem se n√£o houver produtos
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['erro' => 'Nenhum produto encontrado para os critÈrios informados.']);
+            echo json_encode(['erro' => 'Nenhum produto encontrado.']);
             exit;
         }
     } else {
-        // Se a consulta falhar
+        // Exibe erro em caso de falha na consulta
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['erro' => 'Erro ao executar a consulta no banco de dados.']);
+        echo json_encode(['erro' => 'Erro ao consultar os produtos.']);
         exit;
     }
-} else {
-    // Se a requisiÁ„o n„o for POST
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['erro' => 'Erro: MÈtodo de requisiÁ„o inv·lido.']);
-    exit;
 }
-?>

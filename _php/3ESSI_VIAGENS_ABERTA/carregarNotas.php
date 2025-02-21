@@ -8,10 +8,10 @@ if (isset($_GET['viagemId'])) {
     $sql = "
     SELECT n.n_nota 
     FROM notas AS n
-    INNER JOIN monitoramento AS m ON n.id_monitoramento = m.id
-    WHERE n.id_monitoramento = ? AND m.finalizada IS NULL";
+    INNER JOIN monitoramento AS m ON n.id_monitoramento = m.id OR n.id_monitoramento2 = m.id OR n.id_monitoramento3 = m.id
+    WHERE (n.id_monitoramento = ? OR n.id_monitoramento2 = ? OR n.id_monitoramento3 = ?) AND m.finalizada IS NULL";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $viagemId);
+    $stmt->bind_param('iii', $viagemId, $viagemId, $viagemId);
     $stmt->execute();
     $result = $stmt->get_result();
 

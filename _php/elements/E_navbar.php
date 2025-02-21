@@ -25,7 +25,7 @@ $relative = isset($_POST['relative']) ? $_POST['relative'] : '';
         <a class="dropdown-item" id="notas-tab" href="'.$relative.'3ESSI_NOTAS_MONITORAMENTO/view_altera_clientes.php">Alterar Clientes</a>
         <a class="dropdown-item" id="notas-tab" href="'.$relative.'3ESSI_NOTAS_MONITORAMENTO/view_base_rota_cidades.php">Base Rota Cidades</a>
         <a class="dropdown-item" id="notas-tab" href="'.$relative.'3ESSI_NOTAS_MONITORAMENTO/view_base_rota_bairros.php">Base Rota Bairros</a>
-
+	<a class="dropdown-item" id="notas-tab" href="'.$relative.'3ESSI_NOTAS_MONITORAMENTO/view_controle_cargas.php">Controle Cargas</a>
 
 
       </div>
@@ -77,13 +77,9 @@ $relative = isset($_POST['relative']) ? $_POST['relative'] : '';
       <a class="nav-link dropdown-toggle" style="padding-bottom: 13px;" id="notas-dropdown" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Mapa de Carregamento</a>
       <div class="dropdown-menu" style="background-color: white; padding: 5px 0; margin-top: -7px;">
         <a class="dropdown-item" id="mapa-tab-tab" href="'.$relative.'3ESSI_MAPA_CARREGAMENTO/view_get_products.php" role="tab" aria-controls="Mapa de Carregamentos" aria-selected="false" style="height: 100%">Mapa de Carregamento</a>
-        <a class="dropdown-item" id="mapa-tab-tab" href="'.$relative.'3ESSI_MAPA_CARREGAMENTO/view_get_products_2.php" role="tab" aria-controls="Mapa de Carregamentos" aria-selected="false" style="height: 100%">Mapa de Carregamento 2</a>
+        <a class="dropdown-item" id="mapa-tab-tab" href="'.$relative.'3ESSI_MAPA_CARREGAMENTO/view_get_products_2.php" role="tab" aria-controls="Mapa de Carregamentos" aria-selected="false" style="height: 100%">Mapa de Carregamento Completo</a>
     </li>';
-  echo
-    '<li class="nav-item">
-      <a class="nav-link" id="mapa-tab" data-toggle="tab" href="'.$relative.'3ESSI_MAPA_CARREGAMENTO/view_get_products.php" role="tab" aria-controls="Mapa de Carregamentos" aria-selected="false" style="height: 100%">Mapa de Carregamento</a>
-    </li>';
-    
+ 
   if($_SESSION["tipo"] == 1){
     echo 
     '<li class="nav-item">'.

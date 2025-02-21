@@ -25,7 +25,7 @@ function gerarRelatorioCompleto(placa, largada, id_monitoramento) {
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(response);
                 link.href = url;
-                link.download = 'Mapa_Carregamento.pdf';  // Nome do arquivo
+                link.download = 'Mapa_Carregamento_' + placa + '.pdf';  // Nome do arquivo com a placa
                 link.click();  // Simula o clique para download
                 URL.revokeObjectURL(url);  // Libera a URL do blob após o download
             } else {
@@ -37,6 +37,46 @@ function gerarRelatorioCompleto(placa, largada, id_monitoramento) {
             console.log("Erro na requisição: ", status, error);
             alert("Erro na requisição: " + error);
         }
+    });
+}
+function gerarMapaXLS(placa, largada, id_monitoramento) {
+    fetch('gerar_relatorio_mapa_XLS.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `placa=${placa}&largada=${largada}&id_monitoramento=${id_monitoramento}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.erro) {
+            alert("Erro: " + data.erro);
+            return;
+        }
+
+        // Criar planilha com SheetJS
+        let ws_data = [["Operação", "Código", "Descrição", "Peso", "Quantidade", "Tipo", "Data Produção", "Data Validade"]];
+        data.forEach(produto => {
+            ws_data.push([
+                produto.fornecedor,
+                produto.cod,
+                produto.descricao,
+                produto.Peso,
+                produto.quantidade,
+                produto.UnidadeAuxiliar,
+                produto.data_producao,
+                produto.data_validade
+            ]);
+        });
+
+        let wb = XLSX.utils.book_new();
+        let ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, "Mapa de Carregamento");
+
+        XLSX.writeFile(wb, `Mapa_Carregamento_${placa}.xlsx`);
+    })
+    .catch(error => {
+        console.error("Erro ao gerar planilha:", error);
     });
 }
 
@@ -67,7 +107,7 @@ function gerarRomaneio(placa, largada, id_monitoramento) {
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(response);
                 link.href = url;
-                link.download = 'Mapa_Carregamento.pdf';  // Nome do arquivo
+                link.download = 'Romaneio_notas_'+placa+'.pdf';  // Nome do arquivo
                 link.click();  // Simula o clique para download
                 URL.revokeObjectURL(url);  // Libera a URL do blob após o download
             } else {
@@ -79,6 +119,87 @@ function gerarRomaneio(placa, largada, id_monitoramento) {
             console.log("Erro na requisição: ", status, error);
             alert("Erro na requisição: " + error);
         }
+    });
+}
+function gerarRomaneioXLS(placa, largada, id_monitoramento) {
+    fetch('gerar_relatorio_romaneio_clientes_XLS.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `placa=${placa}&largada=${largada}&id_monitoramento=${id_monitoramento}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.erro) {
+            alert("Erro: " + data.erro);
+            return;
+        }
+
+        // Criar planilha com SheetJS
+        let ws_data = [["Nota Fiscal", "Nome", "Endereço", "Numero", "Bairro", "Cidade", "Peso", "Valor Nf"]];
+        data.forEach(clientes => {
+            ws_data.push([
+                clientes.n_nota,
+                clientes.nome,
+                clientes.rua,
+                clientes.numero,
+                clientes.bairro,
+                clientes.cidade,
+                clientes.peso_bruto,
+                clientes.valor_nota
+            ]);
+        });
+
+        let wb = XLSX.utils.book_new();
+        let ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, "Romaneio_notas");
+
+        XLSX.writeFile(wb, `Romaneio_notas_${placa}.xlsx`);
+    })
+    .catch(error => {
+        console.error("Erro ao gerar planilha:", error);
+    });
+}
+function gerarRomaneioItensXLS(placa, largada, id_monitoramento) {
+    fetch('gerar_relatorio_romaneio_itens_XLS.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `placa=${placa}&largada=${largada}&id_monitoramento=${id_monitoramento}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.erro) {
+            alert("Erro: " + data.erro);
+            return;
+        }
+
+        // Criar planilha com SheetJS
+        let ws_data = [["Operação", "Nota Fiscal", "Codigo", "Descrição", "Peso", "Quantidade", "Tipo", "Data de Produção","Data de Validade"]];
+        data.forEach(produtos => {
+            ws_data.push([
+                produtos.fornecedor,
+                produtos.nf,
+                produtos.cod,
+                produtos.descricao,
+                produtos.quantidade,
+                produtos.QuantAux,
+                produtos.UnidadeAuxiliar,
+                produtos.data_producao,
+                produtos.data_validade
+            ]);
+        });
+
+        let wb = XLSX.utils.book_new();
+        let ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, "Romaneio_itens");
+
+        XLSX.writeFile(wb, `Romaneio_itens_${placa}.xlsx`);
+    })
+    .catch(error => {
+        console.error("Erro ao gerar planilha:", error);
     });
 }
 
@@ -136,10 +257,29 @@ $(document).ready(() => {
                                         onclick="abrirModalDetalhado('${monitoramento.placa}', '${dataLancamento}','${monitoramento.idMonitoramento}')">
                                     Ver Detalhado
                                 </button>
-                                
-                                <button class="btn btn-primary" onclick="gerarRelatorioCompleto('${monitoramento.placa}', '${dataLancamento}','${monitoramento.idMonitoramento}')">Gerar Mapa de Carregamento</button>
-                                <button class="btn btn-primary" onclick="gerarRomaneio('${monitoramento.placa}', '${dataLancamento}','${monitoramento.idMonitoramento}')">Gerar Romaneio </button>
-            
+    
+                                <!-- Botão dropdown para Mapa de Carregamento -->
+                                <div class="btn-group">
+                                    <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Gerar Mapa de Carregamento
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="gerarRelatorioCompleto('${monitoramento.placa}', '${dataLancamento}', '${monitoramento.idMonitoramento}')">PDF</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="gerarMapaXLS('${monitoramento.placa}', '${dataLancamento}', '${monitoramento.idMonitoramento}')">XLS</a></li>
+                                    </ul>
+                                </div>
+    
+                                <!-- Botão dropdown para Romaneio -->
+                                <div class="btn-group">
+                                    <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Gerar Romaneio
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="gerarRomaneio('${monitoramento.placa}', '${dataLancamento}', '${monitoramento.idMonitoramento}')">PDF</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="gerarRomaneioXLS('${monitoramento.placa}', '${dataLancamento}', '${monitoramento.idMonitoramento}')">XLS clientes</a></li><li><a class="dropdown-item" href="#" onclick="gerarRomaneioItensXLS('${monitoramento.placa}', '${dataLancamento}', '${monitoramento.idMonitoramento}')">XLS itens</a></li>
+                                    </ul>
+                                </div>
+    
                             </div>
                         </div>
                     `;
@@ -152,6 +292,8 @@ $(document).ready(() => {
             }
         });
     };
+    
+    
 
   // Função para abrir o modal detalhado
     window.abrirModalDetalhado = (placa, largada, id_monitoramento) => {

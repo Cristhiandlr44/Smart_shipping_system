@@ -85,6 +85,10 @@ if (!empty($_FILES['xmlFilesInput']['tmp_name'])) {
                     $xProd = (string) $det->prod->xProd;
                     $uTrib = (string) $det->prod->uTrib;
                     $qTrib = (string) $det->prod->qTrib;
+                    $vProd = (string) $det->prod->vProd;
+                    $vUnTrib = (string) $det->prod->vUnTrib;
+
+
                 
                     // Extrair o conteúdo de <infAdProd>
                     $infAdProd = (string) $det->infAdProd;
@@ -99,8 +103,8 @@ if (!empty($_FILES['xmlFilesInput']['tmp_name'])) {
                         $unidadeAux = 'N/A';
                     }
                 
-                    $sqlProdutos = "INSERT INTO produtos (cod, nf, descricao, unidade, quantidade, QuantAux, UnidadeAuxiliar)
-                                    VALUES (:cod, :nf, :descricao, :unidade, :quantidade, :QuantAux, :unidadeAux)";
+                    $sqlProdutos = "INSERT INTO produtos (cod, nf, descricao, unidade, quantidade, QuantAux, UnidadeAuxiliar,valor_item, valor_uni)
+                                    VALUES (:cod, :nf, :descricao, :unidade, :quantidade, :QuantAux, :unidadeAux, :valorItem, :valorUni)";
                     $stmtProdutos = $pdo->prepare($sqlProdutos);
                     $stmtProdutos->bindParam(':cod', $cProd);
                     $stmtProdutos->bindParam(':nf', $nNF);
@@ -109,6 +113,8 @@ if (!empty($_FILES['xmlFilesInput']['tmp_name'])) {
                     $stmtProdutos->bindParam(':quantidade', $qTrib);
                     $stmtProdutos->bindParam(':QuantAux', $numero);
                     $stmtProdutos->bindParam(':unidadeAux', $unidadeAux);
+                    $stmtProdutos->bindParam(':valorItem', $vProd);
+                    $stmtProdutos->bindParam(':valorUni', $vUnTrib);
                     $stmtProdutos->execute();
                 }
                 
@@ -129,3 +135,4 @@ if (!empty($_FILES['xmlFilesInput']['tmp_name'])) {
 
 $pdo = null;
 ?>
+

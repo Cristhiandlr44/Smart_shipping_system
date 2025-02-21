@@ -4,8 +4,8 @@ require_once('conexao.php');
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
 
-    $sqlAurora = "UPDATE PRODUTOS SET data_producao = ?, data_validade = ? WHERE nf = ? AND cod = ?" ;
-    $sqlAlteracao = "UPDATE PRODUTOS SET item_alterado = 'S' WHERE nf = ? AND cod = ?";
+    $sqlAurora = "UPDATE produtos SET data_producao = ?, data_validade = ? WHERE nf = ? AND cod = ?" ;
+    $sqlAlteracao = "UPDATE produtos SET item_alterado = 'S' WHERE nf = ? AND cod = ?";
 
     $sqlInsert = "INSERT INTO produtos (cod, descricao, nf, quantidade, unidade, QuantAux, data_producao, data_validade) 
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)";

@@ -73,16 +73,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Função para carregar as rotas via AJAX
 function carregarRotas() {
+    console.log("passou 1")
     if (filtrada == false) {
         fetch('get_rotas.php')
         .then(response => response.json())
         .then(data => {
+            console.log("passou 2")
             if (data.error) {
                 console.error('Erro ao carregar rotas:', data.error);
                 return;
             }
 
-            // Supondo que os dados retornados sejam estruturados assim:
+            // Supondo que os dados retornado sejam estruturados assim:
             // data.rotas -> Rotas normais
             // data.rotasRedes -> Rotas das redes
             const rotas = data.rotas || [];  // Dados das rotas
@@ -132,9 +134,207 @@ function carregarRotas() {
     }
 }
 
+function gerarRelatorioCompletoParados() {
+    $.ajax({
+        url: "gerar_relatorio_mapa_parados.php",
+        type: "POST",
+        data: {
+            permission: 1
+        },
+        xhrFields: {
+            responseType: 'blob'  // Espera um Blob como resposta
+        },
+        success: function(response, status, xhr) {
+            console.log("Resposta do servidor: ", response);
+
+            // Verificando o tipo de resposta
+            const contentType = xhr.getResponseHeader('Content-Type');
+            console.log("Content-Type da resposta: ", contentType);
+
+            if (contentType && contentType.includes('application/pdf')) {
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(response);
+                link.href = url;
+                link.download = 'Mapa_Carregamento_Parados.pdf';  // Nome do arquivo com a placa
+                link.click();  // Simula o clique para download
+                URL.revokeObjectURL(url);  // Libera a URL do blob após o download
+            } else {
+                console.log("Erro: Resposta inesperada, não é um arquivo PDF.");
+                alert("Erro: O arquivo retornado não é um PDF. Tipo de resposta: " + contentType);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.log("Erro na requisição: ", status, error);
+            alert("Erro na requisição: " + error);
+        }
+    });
+}
+function gerarMapaXLSParados() {
+    fetch('gerar_relatorio_mapa_parados_XLS.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+        
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.erro) {
+            alert("Erro: " + data.erro);
+            return;
+        }
+
+        // Criar planilha com SheetJS
+        let ws_data = [["Rota","Operação", "Código", "Descrição", "Peso", "Quantidade", "Tipo", "Data Produção", "Data Validade"]];
+        data.forEach(produto => {
+            ws_data.push([
+                produto.rota,
+                produto.fornecedor,
+                produto.cod,
+                produto.descricao,
+                produto.Peso,
+                produto.quantidade,
+                produto.UnidadeAuxiliar,
+                produto.data_producao,
+                produto.data_validade
+            ]);
+        });
+
+        let wb = XLSX.utils.book_new();
+        let ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, "Mapa de Carregamento");
+
+        XLSX.writeFile(wb, `Mapa_Carregamento_Parado.xlsx`);
+    })
+    .catch(error => {
+        console.error("Erro ao gerar planilha:", error);
+    });
+}
+function gerarRomaneioParados() {
+    
+    $.ajax({
+        url: "gerar_relatorio_romaneio_parados.php",
+        type: "POST",
+        data: {
+            
+            permission: 1
+            
+        },
+        xhrFields: {
+            responseType: 'blob'  // Espera um Blob como resposta
+        },
+        success: function(response, status, xhr) {
+            console.log("Resposta do servidor: ", response);
+
+            // Verificando o tipo de resposta
+            const contentType = xhr.getResponseHeader('Content-Type');
+            console.log("Content-Type da resposta: ", contentType);
+
+            if (contentType && contentType.includes('application/pdf')) {
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(response);
+                link.href = url;
+                link.download = 'Romaneio_notas_Parado.pdf';  // Nome do arquivo
+                link.click();  // Simula o clique para download
+                URL.revokeObjectURL(url);  // Libera a URL do blob após o download
+            } else {
+                console.log("Erro: Resposta inesperada, não é um arquivo PDF.");
+                alert("Erro: O arquivo retornado não é um PDF. Tipo de resposta: " + contentType);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.log("Erro na requisição: ", status, error);
+            alert("Erro na requisição: " + error);
+        }
+    });
+}
+function gerarRomaneioXLSParados() {
+    fetch('gerar_relatorio_romaneio_clientes_parados_XLS.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+       
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.erro) {
+            alert("Erro: " + data.erro);
+            return;
+        }
+
+        // Criar planilha com SheetJS
+        let ws_data = [["Rota","Nota Fiscal", "Nome", "Endereço", "Numero", "Bairro", "Cidade", "Peso", "Valor Nf"]];
+        data.forEach(clientes => {
+            ws_data.push([
+		clientes.rota,
+                clientes.n_nota,
+                clientes.nome,
+                clientes.rua,
+                clientes.numero,
+                clientes.bairro,
+                clientes.cidade,
+                clientes.peso_bruto,
+                clientes.valor_nota
+            ]);
+        });
+
+        let wb = XLSX.utils.book_new();
+        let ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, "Romaneio_notas");
+
+        XLSX.writeFile(wb, `Romaneio_notas_Parado.xlsx`);
+    })
+    .catch(error => {
+        console.error("Erro ao gerar planilha:", error);
+    });
+}
+function gerarRomaneioItensXLS() {
+    fetch('gerar_relatorio_romaneio_itens_parados_XLS.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+       
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.erro) {
+            alert("Erro: " + data.erro);
+            return;
+        }
+
+        // Criar planilha com SheetJS
+        let ws_data = [["Rota","Operação", "Nota Fiscal", "Codigo", "Descrição", "Peso", "Quantidade", "Tipo", "Data de Produção","Data de Validade"]];
+        data.forEach(produtos => {
+            ws_data.push([
+                produtos.rota,
+                produtos.fornecedor,
+                produtos.nf,
+                produtos.cod,
+                produtos.descricao,
+                produtos.quantidade,
+                produtos.QuantAux,
+                produtos.UnidadeAuxiliar,
+                produtos.data_producao,
+                produtos.data_validade
+            ]);
+        });
+
+        let wb = XLSX.utils.book_new();
+        let ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, "Romaneio_itens");
+
+        XLSX.writeFile(wb, `Romaneio_itens_Parados}.xlsx`);
+    })
+    .catch(error => {
+        console.error("Erro ao gerar planilha:", error);
+    });
+}
 
 
-// Função para exibir os cards das rotas
+
+// Função para exibir os cards das rotas 
 function exibirCardsRotas(rotas) {
     const cardsContainer = document.getElementById("cardsRotas");
     cardsContainer.innerHTML = ""; // Limpa os cards existentes
@@ -279,7 +479,10 @@ function buscarNotas(rotaId) {
 let linhasSelecionadas = [];
 
 function abrirModalNotas(rotaId) {
+   
     if (filtrada == false) {
+        console.log("chama");
+        console.log("rota: ",rotaId);
         fetch(`get_notas.php?rota=${rotaId}`)
         .then(response => response.json())
         .then(data => {
